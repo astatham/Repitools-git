@@ -1,3 +1,4 @@
+# tests.R
 require("Repitools")
 require("BSgenome.Hsapiens.UCSC.hg18")
 require("chipseq")
