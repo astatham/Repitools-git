@@ -1,28 +1,50 @@
 \name{annotationBlocksLookup}
 \alias{annotationBlocksLookup}
-\title{Forms a mapping between probe locations and chromosomal blocks (regions)}
+\alias{annotationBlocksLookup,data.frame,data.frame-method}
+\alias{annotationBlocksLookup,data.frame,GRanges-method}
+\title{Forms a mapping between probe locations and chromosomal blocks (regions).}
 \description{
-Starting from a table of genome locations for probes (see \code{probes} below) and a table of regions of interest (see \code{annotation} below), this procedure forms a list structure that contains the indices to map from one to the other.
+  Starting from a table of genome locations for probes, and a table of regions
+  of interest, this procedure forms a list structure that contains the indices
+  to map from one to the other.
 }
-\usage{
-annotationBlocksLookup(probes, annotation, probeIndex = NULL, verbose=TRUE)
+\section{Usage}{
+  \describe{
+    \code{annotationBlocksLookup(x, anno, ...)}
+  }
 }
-\arguments{
-  \item{probes}{probe genomic locations, a \code{data.frame} with required elements \code{chr} (character), \code{position} (integer), and optionally \code{strand} ("+" or "-")}
-  \item{annotation}{a \code{data.frame} with required elements \code{chr} (character), \code{start} (integer), \code{end} (integer) and optional elements \code{strand} ("+" or "-" or "*") and \code{name} (character). If column \code{strand} is not present, the region is treated as being on both strands (e.g. CpG islands.)}
-  \item{probeIndex}{a probe index, default \code{NULL}}
-  \item{verbose}{whether to print progress to screen}
+\section{Arguments}{
+  \describe{
+    \item{x:}{probe genomic locations, a \code{data.frame} with required elements
+           \code{chr}, \code{position}, and optionally \code{index}}
+    \item{anno:}{a \code{data.frame} with required elements \code{chr}, \code{start},
+           \code{end}, \code{strand} and optional element \code{name}.
+           Also may be a \code{GRanges} with optional elementMetadata column
+           \code{name}.}
+    \item{verbose:}{Whether to print progress to screen. Default: TRUE}
+    \item{...:}{Parameters described above, that are not used in the top-level
+               error-checking stage, but are passed further into a private
+               function that uses them in its processing.}
+  }
 }
 \details{
-Strandedness of probes is ignored, even if it is given. 
+  Strandedness of probes is ignored, even if it is given.
+
+  If \code{x} has no index column, then the probes are given indices from 1 to
+  the number of probes, in the order that they appear in the \code{data.frame} or
+  \code{GRanges} object. 
 }
 \value{
   A list with elements
-  \item{indexes}{a list for each row in \code{annotation} table, giving a vector of indices to the probe table}
-  \item{offsets}{a list for each row in \code{annotation} table, giving a vector (corresponding to \code{indexes}) of offsets (from the beginning of the annotation block) for each probe}
+  \item{indexes}{a list for each gene in \code{y}, giving a vector
+                 of indices to the probe data.}
+  \item{offsets}{a list for each gebe in \code{y}, giving a vector
+                 (corresponding to \code{indexes}) of offsets relative to the
+                 start of the block.}
 }
 \author{Aaron Statham, Mark Robinson}
-\seealso{\code{\link{annotationLookup}} which simplifies annotation lookups for constant sized regions}
+\seealso{\code{\link{annotationLookup}} which simplifies annotation lookups for
+        constant sized regions}
 \examples{
 # create example set of probes and gene start sites
 probeTab <- data.frame(position=seq(1000,3000,by=200), chr="chrX", strand="+")

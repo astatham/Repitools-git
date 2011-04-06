@@ -1,180 +1,160 @@
-setGeneric("annotationBlocksCounts", function(rs, annotation, ...){standardGeneric("annotationBlocksCounts")})
-setGeneric("annotationCounts", function(rs, annotation, ...){standardGeneric("annotationCounts")})
+setGeneric("annotationBlocksLookup", function(x, anno, ...)
+           {standardGeneric("annotationBlocksLookup")})
+setGeneric("annotationLookup", function(x, anno, ...)
+           {standardGeneric("annotationLookup")})
+setGeneric(".annotationLookup", function(x, anno, ...)
+           {standardGeneric(".annotationLookup")})
+setGeneric("annotationBlocksCounts", function(x, anno, ...)
+           {standardGeneric("annotationBlocksCounts")})
+setGeneric(".annotationBlocksCounts", function(x, anno, ...)
+           {standardGeneric(".annotationBlocksCounts")})
+setGeneric("annotationCounts", function(x, anno, ...)
+           {standardGeneric("annotationCounts")})
 
-annotationBlocksLookup <- function(probes, annotation, probeIndex=NULL, verbose=TRUE) {
-#probes = dataframe of $chr, $position and $strand ("+" or "-")
-#annotation = dataframe of $chr, $start, $end, $strand ("+" or "-") and $name or rownames = annotation name
+setMethod("annotationBlocksLookup", c("data.frame", "GRanges"),
+    function(x, anno, verbose = TRUE)
+{
+    if("index" %in% colnames(x)) p.inds <- x$index else p.inds <- 1:nrow(x) 
+    probesGR <- GRanges(x$chr, IRanges(x$position, width = 1))
+    g.names <- .getNames(anno)
 
+    if(verbose == TRUE) message("Processing mapping between probes and features.")
+    mapping <- suppressWarnings(findOverlaps(anno, probesGR)@matchMatrix)
+    inds <- split(p.inds[mapping[, 2]], factor(mapping[, 1],
+                                levels = 1:length(g.names)))
+    pos.list <- split(start(probesGR[mapping[, 2]]), factor(mapping[, 1],
+                                             levels = 1:length(g.names)))
+    
+    offs <- mapply(function(u, v) u - v, pos.list, start(anno),
+                   SIMPLIFY = FALSE)
+    offs <- mapply(function(u, v)
+                   {
+                       names(v) <- u
+                       v
+                   }, inds, offs, SIMPLIFY = FALSE)
+    names(inds) <- names(offs) <- g.names
+    if(verbose == TRUE) message("Mapping done.")
 
-	processChromosome <- function(probePositions, annotation) {
-		numAnnot = nrow(annotation)
-		annotProbes = list(indexes=vector(mode='list', length=numAnnot), offsets=vector(mode='list', length=numAnnot))
-		if (length(probePositions)==0) return(annotProbes) #if no probes on this chromosome return empty annotations	
-		require(IRanges)
-		probes.IRanges <- IRanges(start=probePositions, width=1)
-		annotation.IRanges <- IRanges(start=annotation$start, end=annotation$end)
-		anno.overlaps <- findOverlaps(query=probes.IRanges, subject=annotation.IRanges)
-		anno.overlaps <- tapply(anno.overlaps@matchMatrix[,1], anno.overlaps@matchMatrix[,2], list)
-		annotProbes$indexes[as.integer(names(anno.overlaps))] <- anno.overlaps
-		annotProbes$offsets <- mapply(function(x ,y) probePositions[x]-y, annotProbes$indexes, annotation$start, SIMPLIFY = FALSE)
-		annotProbes$indexes <- lapply(annotProbes$indexes, function(x) as.integer(names(probePositions[x])))
-		return(annotProbes)
-  }
-
-
-	if (is.null(annotation$strand)) { #dont bother with strandedness anywhere
-		probesStrandChr <- probes$chr
-		annotationStrandChr <- annotation$chr
-	} else { #create separate plus & minus chromosomes
-		if (is.null(probes$strand)) stop("error: if 'annotation' contains strand information, 'probes' must contain strand information as well")
-		probesStrandChr <- paste(probes$chr, probes$strand, sep="")
-		annotationStrandChr <- paste(annotation$chr, annotation$strand, sep="")
-	}
-
-	#split by strand AND chromosome simultaneously
-	annotChr = split(1:nrow(annotation), annotationStrandChr)
-	annot = list(indexes=vector(mode='list', length=nrow(annotation)), offsets=vector(mode='list', length=nrow(annotation)))
-	if (verbose) cat("Processing mapping between probes and genes.\n")
-
-	for (i in annotChr) {
-		thisChr = annotationStrandChr[i[1]]
-		
-		#Grab the subset of probes on that chromosome
-		tempIndex = which(probesStrandChr==thisChr)
-		tempProbes = probes$position[tempIndex]
-		#Use probeIndex supplied, or assume probes are in order
-		if (is.null(probeIndex)) names(tempProbes) <- tempIndex else names(tempProbes) <- probeIndex[tempIndex]
-
-		#Process the chromosome
-		tempAnnot = processChromosome(tempProbes, annotation[i,])
-		annot$indexes[i] = tempAnnot$indexes
-		annot$offsets[i] = tempAnnot$offsets
-	}
-	if (!is.null(rownames(annotation))) {
-		names(annot$indexes) <- annotation$name
-		names(annot$offsets) <- annotation$name
-	} else {
-		names(annot$indexes) <- rownames(annotation)
-		names(annot$offsets) <- rownames(annotation)
-	}
-	if (verbose) cat("Mapping done.\n")
-	return(annot)
-	#returns $indexes = a list for each annotation entry with the indexes of the probes within the block
-	#	 $offsets = a list for each annotation entry with the offsets from the beginning of the block
-	
-}
-
-annotationLookup <- function(probes, annotation, bpUp, bpDown, probeIndex=NULL, verbose=TRUE) {
-#probes = dataframe of $chr and $position
-#annotation = dataframe of $chr, $position, $strand ("+" or "-") and $name or rownames = annotation name
-#if annotation has no strand, assume are + strand
-	if (is.null(annotation$strand)) annotation$strand <- "+"
-	if (is.null(annotation$position)) annotation$position <- ifelse(annotation$strand == '+', annotation$start, annotation$end)
-	annotationTemp <- data.frame(chr=annotation$chr, 
-                                     start=annotation$position+ifelse(annotation$strand=="+",-bpUp, -bpDown),
-                                     end=annotation$position+ifelse(annotation$strand=="+",+bpDown, +bpUp),
-                                     name=rownames(annotation), stringsAsFactors=F)
-	annot <- annotationBlocksLookup(probes, annotationTemp, probeIndex, verbose)
-
-	annot$offsets[annotation$strand=="+"] = lapply(annot$offsets[annotation$strand=="+"], function(x,bpOff) {return(x-bpOff)}, bpUp)
-	annot$offsets[annotation$strand=="-"] = lapply(annot$offsets[annotation$strand=="-"], function(x,bpOff) {return(rev(bpOff-x))}, bpDown)
-	annot$indexes[annotation$strand=="-"] = lapply(annot$indexes[annotation$strand=="-"], rev)
-	if (!is.null(rownames(annotation))) {
-		names(annot$indexes) <- annotation$name
-		names(annot$offsets) <- annotation$name
-	} else {
-		names(annot$indexes) <- rownames(annotation)
-		names(annot$offsets) <- rownames(annotation)
-	}
-
-	return(annot)
-}
-
-setMethod("annotationBlocksCounts", "GenomeDataList", function(rs, annotation, seqLen=NULL, verbose=TRUE, ...) {
-    require(chipseq)
-    if (class(annotation)=="data.frame") {
-        if (is.null(annotation$name)) annotation$name <- 1:nrow(annotation)
-        anno.names <- annotation$name
-        annotation <- RangedData(IRanges(start=annotation$start, end=annotation$end), space=annotation$chr, name=annotation$name)
-        annotation$order <- match(anno.names, annotation$name)
-        rm(anno.names)
-    } else stopifnot(class(annotation)=="RangedData") 
-    anno.counts <- matrix(as.integer(NA), nrow=nrow(annotation), ncol=length(rs), dimnames=list(annotation$name, names(rs)))
-    if (!class(rs[[1]][[1]])=="IRanges") {
-        if (is.null(seqLen)) stop("If rs has not been extended, seqLen must be supplied")
-        rs <- extendReads(rs, seqLen=seqLen)
-    }
-    anno.chr <- names(annotation)
-    for (i in 1:length(rs)) {
-        if(verbose) cat(names(rs)[i], " ", sep="")
-
-        #Find chromosomes in annotation but not in rs
-        rs.chr <- names(rs[[i]])
-        nochr <- which(!anno.chr %in% rs.chr)
-        nochr.list <- rep(list(IRanges()), length(nochr))
-        names(nochr.list) <- anno.chr[nochr]
-
-        #convert rs to RangesList, inserting empty chromosomes if needed
-        rs[[i]] <- RangesList(c(as.list(rs[[i]]), nochr.list))
-        rs.chr <- names(rs[[i]])
-        both.chr <- intersect(anno.chr, rs.chr)
-        anno.counts[,i] <- unlist(countOverlaps(annotation[both.chr], rs[[i]][both.chr], type="any"))
-    }
-    if(verbose) cat("\n")
-    if (is.null(annotation$order)) anno.counts else anno.counts[annotation$order,]
+    list(indexes = inds, offsets = offs)
 })
 
-setMethod("annotationBlocksCounts", "GRangesList", function(rs, annotation, seqLen=NULL, verbose=TRUE, ...) {
-    require(GenomicRanges)
-    if (class(annotation)=="data.frame") {
-    	if (is.null(annotation$name)) annotation$name <- 1:nrow(annotation)
-        annotation <- GRanges(seqnames=annotation$chr, ranges = IRanges(start = annotation$start, end = annotation$end), name = annotation$name)
-    } else {
-    	stopifnot(class(annotation)=="GRanges")
-    	if(!"name" %in% names(elementMetadata(annotation))) elementMetadata(annotation)$name <- 1:length(annotation)
-    }
+setMethod("annotationBlocksLookup", c("data.frame", "data.frame"),
+    function(x, anno, ...)
+{
+    col.missing <- setdiff(c("chr", "start", "end"), colnames(anno))
+    if(length(col.missing) > 0)
+	stop("Columns ", paste(col.missing, collapse = ", "),
+             " of annotation are not present.")
 
-    anno.counts <- matrix(as.integer(NA), nrow=length(annotation), ncol=length(rs), dimnames=list(elementMetadata(annotation)[, "name"], names(rs)))
-    rs <- endoapply(rs, resize, seqLen)
-    for (i in 1:length(rs)) {
-        if(verbose) cat("Counting in", names(rs)[i], "\n")
-	anno.counts[, i] <- countOverlaps(annotation, rs[[i]])
-    }
-    if(verbose)
-    	cat("Counting successful.\n")
-    return(anno.counts)
+    annotationBlocksLookup(x, .annoDF2GR(anno), ...)
 })
 
-setMethod("annotationCounts", "GenomeDataList", function(rs, annotation, bpUp, bpDown, seqLen=NULL, verbose=TRUE) {
-	anno = annotation
-	if (is.null(anno$strand)) anno$strand <- "*"
-	if (is.null(anno$name)) anno$name <- 1:nrow(annotation)
-	if (class(anno)=="data.frame") {
-		anno$position <- mapply(function(aStrand, aStart, aEnd) {if(aStrand == '+') aStart else if(aStrand == '-') aEnd else round((aStart + aEnd) / 2)}, anno$strand, anno$start, anno$end)
-		anno$start=ifelse(anno$strand=="+", anno$position-bpUp, anno$position-bpDown)
-        	anno$end=ifelse(anno$strand=="+", anno$position+bpDown, anno$position+bpUp)
-	} else {
-		stopifnot(class(annotation)=="RangedData") 
-		
-		position <- mapply(function(aStrand, aStart, aEnd) {if(aStrand == '+') aStart else if(aStrand == '-') aEnd else round((aStart + aEnd) / 2)}, anno$strand, start(anno), end(anno))
-		anno <- RangedData(IRanges(start = position - bpUp, end = position + bpDown), space=space(anno), name=anno$name)
-	}
-	annotationBlocksCounts(rs, anno, seqLen, verbose)
+setMethod(".annotationLookup", c("data.frame", "GRanges"),
+    function(x, anno, up, down, verbose = TRUE)
+{   
+    blocksGR <- .makeBlocks(anno, up, down)
+    annot <- annotationBlocksLookup(x, blocksGR, verbose)
+
+    pos <- as.logical(strand(anno) == '+')
+    annot$offsets[pos] <- lapply(annot$offsets[pos], function(z) z - up)
+    annot$offsets[!pos] <- lapply(annot$offsets[!pos], function(z) rev(down - z))
+    annot$indexes[!pos] <- lapply(annot$indexes[!pos], rev)
+    names(annot$offsets) <- names(annot$indexes) <- .getNames(anno)
+
+    annot
 })
 
-setMethod("annotationCounts", "GRangesList", function(rs, annotation, bpUp, bpDown, seqLen=NULL, verbose=TRUE) {
-	anno = annotation
-	if (class(anno)=="data.frame") {
-	if (is.null(anno$strand)) anno$strand <- "*"
-	anno$position <- mapply(function(aStrand, aStart, aEnd) {if(aStrand == '+') aStart else if(aStrand == '-') aEnd else round((aStart + aEnd) / 2)}, anno$strand, anno$start, anno$end)
-	if (is.null(anno$name)) anno$name <- 1:nrow(annotation)
-	anno$start=ifelse(anno$strand=="+", anno$position-bpUp, anno$position-bpDown)
-        anno$end=ifelse(anno$strand=="+", anno$position+bpDown, anno$position+bpUp)
-	} else {
-		stopifnot(class(annotation)=="GRanges")
+setMethod("annotationLookup", c("data.frame", "GRanges"),
+    function(x, anno, up, down, ...)
+{
+    invisible(.validate(anno, up, down))
+    .annotationLookup(x, anno, up, down, ...)
+})
 
-		position <- mapply(function(aStrand, aStart, aEnd) {if(aStrand == '+') aStart else if(aStrand == '-') aEnd else round((aStart + aEnd) / 2)}, as.character(strand(anno)), as.integer(start(anno)), as.integer(end(anno)))
-		anno <- GRanges(seqnames = seqnames(anno), ranges = IRanges(start = position - bpUp, end = position + bpDown), name=if("name" %in% names(elementMetadata(anno))) elementMetadata(anno)[, "name"] else 1:length(anno))
-	}
-	annotationBlocksCounts(rs, anno, seqLen, verbose)
+setMethod("annotationLookup", c("data.frame", "data.frame"),
+    function(x, anno, ...)
+{
+    col.missing <- setdiff(c("chr", "start", "end", "strand"), colnames(anno))
+    if(length(col.missing) > 0)
+	stop("Columns ", paste(col.missing, collapse = ", "),
+             " of annotation are not present.")
+
+    annotationLookup(x, .annoDF2GR(anno), ...)
+})
+
+setMethod(".annotationBlocksCounts", c("GRanges", "GRanges"),
+    function(x, anno, seq.len = NULL, verbose = TRUE)
+{
+    f.names <- .getNames(anno)
+    if(!is.null(seq.len))
+    {
+        if(verbose == TRUE)
+            message("Extending all reads to fragment length.")
+        x <- resize(x, seq.len)
+        if(verbose == TRUE)
+            message("Read extension complete.\nCounting started.")
+    }
+    counts <- countOverlaps(anno, x)
+    names(counts) <- f.names
+    if(verbose == TRUE)
+    	message("Counting successful.")
+    counts
+})
+
+setMethod(".annotationBlocksCounts", c("GRangesList", "GRanges"),
+    function(x, anno, ...)
+{
+    f.names <- .getNames(anno)
+    counts <- IRanges::lapply(x, function(z)
+                  .annotationBlocksCounts(z, anno, ...))
+    counts <- do.call(cbind, counts)
+    if(!is.null(names(x))) colnames(counts) <- names(x)
+    rownames(counts) <- f.names
+
+    counts
+})
+
+setMethod(".annotationBlocksCounts", c("character", "GRanges"),
+    function(x, anno, ...)
+{
+    f.names <- .getNames(anno)
+    counts <- lapply(x, function(z) .annotationBlocksCounts(BAM2GRanges(z), anno, ...))
+    counts <- do.call(cbind, counts)
+    if(!is.null(names(x))) colnames(counts) <- names(x)
+    rownames(counts) <- f.names
+
+    counts
+})
+
+setMethod(".annotationBlocksCounts", c("GenomeDataList", "GRanges"),
+    function(x, anno, ...)
+{
+    .annotationBlocksCounts(GDL2GRL(x), anno, ...)
+})
+
+setMethod("annotationBlocksCounts", c("ANY", "GRanges"),
+    function(x, anno, ...)
+{
+    .annotationBlocksCounts(x, anno, ...)
+})
+
+setMethod("annotationBlocksCounts", c("ANY", "data.frame"),
+    function(x, anno, ...)
+{
+    annotationBlocksCounts(x, .annoDF2GR(anno), ...)
+})
+
+setMethod("annotationCounts", c("ANY", "GRanges"),
+    function(x, anno, up, down, ...)
+{
+    invisible(.validate(anno, up, down))
+    blocksGR <- .makeBlocks(anno, up, down)
+
+    .annotationBlocksCounts(x, blocksGR, ...)
+})
+
+setMethod("annotationCounts", c("ANY", "data.frame"),
+    function(x, anno, ...)
+{
+    annotationCounts(x, .annoDF2GR(anno), ...)
 })

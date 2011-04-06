@@ -1,7 +1,25 @@
-setGeneric("genomeBlocks", function(organism, chrs, width, spacing=width){standardGeneric("genomeBlocks")})
+setGeneric("genomeBlocks", function(genome, chrs = names(genome), width,
+            spacing = width) {standardGeneric("genomeBlocks")})
 
-setMethod("genomeBlocks", "BSgenome", function(organism, chrs, width, spacing=width) {
-    chr.length <- seqlengths(organism)[chrs]
-    windows <- do.call(c, lapply(names(chr.length), function(x) GRanges(seqnames = x, ranges = IRanges(start=seq.int(spacing/2, chr.length[x], spacing)-width/2+1, end=seq.int(spacing/2, chr.length[x], spacing)+width/2))))
-    return(windows)
+setMethod("genomeBlocks", "numeric", function(genome, chrs = names(genome), width,
+           spacing = width)
+{
+    chr.windows <- lapply(chrs, function(x)
+                          GRanges(seqnames = names(genome[x]),
+                                 ranges = IRanges(start = seq.int(spacing / 2,
+                                                                genome[x],
+                                                                spacing)
+                                                        - width / 2 + 1,
+                                                 end = seq.int(spacing / 2,
+                                                             genome[x],
+                                                             spacing)
+                                                      + width / 2)))
+    suppressWarnings(do.call(c, chr.windows))
+})
+
+setMethod("genomeBlocks", "BSgenome",
+    function(genome, chrs = seqnames(genome), width, spacing = width)
+{
+	chr.lengths <- seqlengths(genome)[chrs]
+	genomeBlocks(chr.lengths, chrs = chrs, width = width, spacing = spacing)
 })

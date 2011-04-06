@@ -1,42 +1,48 @@
-getCN <- function(regionsInfo, readsInputs)
+setGeneric("getCN", function(input.windows, ip.windows, ...){standardGeneric("getCN")})
+
+setMethod("getCN", c("GRanges", "GRanges"),
+    function(input.windows, ip.windows, input.counts, ..., verbose = TRUE)
 {
-	require(DNAcopy)
-	require(IRanges)	
+    if(length(input.windows) != nrow(input.counts))
+        stop("Rows of counts differ to rows of input regions.\n")
+    
+    require(DNAcopy)
+    require(IRanges)	
 
-	Mvalues <- log2((readsInputs[, 2]/ sum(readsInputs[, 2])) / (readsInputs[, 1] / sum(readsInputs[, 1])))
-	cnObject <- CNA(chrom = regionsInfo$inputs[, "chr"], maploc = regionsInfo$inputs[, "start"], data.type = "logratio", genomdat = Mvalues, sampleid = paste(colnames(readsInputs)[2], "/", colnames(readsInputs)[1], "Fold Change"))
-	readsCounts <- colSums(readsInputs)
-	wts <- ((readsCounts[2] - readsInputs[, 2]) / (readsInputs[, 2] * readsCounts[2]) + (readsCounts[1] - readsInputs[, 1]) / (readsInputs[, 1] * readsCounts[1]))^-1
-	nonZero <- which(wts > 0)
-	cnObject <- cnObject[nonZero, ]
-	wts <- wts[nonZero]
-	cnObject <- segment(smooth.CNA(cnObject), weights = wts, p.method = "perm")
-	cnObject$out[, "loc.end"] <- cnObject$out[, "loc.end"] + regionsInfo$inputs[1, "end"] - regionsInfo$inputs[1, "start"] # Extend CNV region to the end of the interval, since all positions are starts.
+    Mvalues <- log2((input.counts[, 2] / sum(input.counts[, 2])) /
+                    (input.counts[, 1] / sum(input.counts[, 1])))
+    cn <- CNA(chrom = as.character(seqnames(input.windows)),
+             maploc = as.numeric(start(input.windows)),
+          data.type = "logratio",
+           genomdat = Mvalues,
+           sampleid = paste(colnames(input.counts)[2], "/",
+                            colnames(input.counts)[1], "Fold Change"))
+    totals <- colSums(input.counts)
+    wts <- ((totals[2] - input.counts[, 2]) / (input.counts[, 2] * totals[2])
+          + (totals[1] - input.counts[, 1]) / (input.counts[, 1] * totals[1]))^-1
+    non0 <- which(wts > 0)
+    cn <- cn[non0, ]
+    wts <- wts[non0]
+    if(verbose == TRUE) message("Segmenting and smoothing.")
+    cn <- segment(smooth.CNA(cn), weights = wts, ..., verbose = 0)
+    # Extend CNV region to the end of the interval, since all positions are starts.
+    cn$out[, "loc.end"] <- cn$out[, "loc.end"] + width(input.windows)[1]
+    CNV.windows <- GRanges(cn$out[, "chrom"],
+                           IRanges(cn$out[, "loc.start"], cn$out[, "loc.end"]))
 	
-	enrichRegionsRanges <- RangedData(IRanges(start = regionsInfo$enriched[, "start"], end = regionsInfo$enriched[, "end"]), space = regionsInfo$enriched[, "chr"])
-	copyRanges <- RangedData(IRanges(start = cnObject$out[, "loc.start"], end = cnObject$out[, "loc.end"]), space = cnObject$out[, "chrom"])
-	map <- findOverlaps(enrichRegionsRanges, copyRanges, select = "first")
+    if(verbose == TRUE) message("Mapping copy number to IP windows.")
+    map <- findOverlaps(ip.windows, CNV.windows, select = "first")
 							   
-	scaleFactors <- numeric()
-	cnPerChr <- split(cnObject$out, cnObject$out[, "chrom"])
-	for(chrIndex in 1:length(map))	
-	{	
-		whichCurrChr <- which(regionsInfo$enriched[, "chr"] == names(map)[[chrIndex]])
-		if(!is.null(cnPerChr[[names(map)[chrIndex]]]))
-		{
-			scaleFactors[whichCurrChr] <- 2^(cnPerChr[[names(map)[chrIndex]]][map[[names(map)[chrIndex]]], "seg.mean"])
-		} else {
-			scaleFactors[whichCurrChr] <- NA
-		}
-	}
-	
-	scaleFactors[which(is.na(scaleFactors))] <- 1 # Regions of no change.
-	
+    relative.cn <- 2^cn$out[map, "seg.mean"]
+    # If CN ratio not called, assume it is 1.
+    relative.cn[is.na(relative.cn)] <- 1
+    names(relative.cn) <- .getNames(ip.windows)
 
-	factorMatrix <- cbind(1, scaleFactors)
-	
-	colnames(factorMatrix) <- colnames(readsInputs)
-	rownames(factorMatrix) <- rownames(regionsInfo$enriched)
-	return(factorMatrix)
-}
+    relative.cn
+})
 
+setMethod("getCN", c("data.frame", "data.frame"),
+    function(input.windows, ip.windows, ...)
+{
+    getCN(.annoDF2GR(input.windows), .annoDF2GR(ip.windows), ...)
+})

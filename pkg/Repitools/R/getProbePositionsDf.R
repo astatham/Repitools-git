@@ -1,14 +1,21 @@
-setMethodS3("getProbePositionsDf", "AffymetrixCdfFile", function(cdf, ..., verbose=-20) {
+setGeneric("getProbePositionsDf", function(cdf, ...)
+           {standardGeneric("getProbePositionsDf")})
 
+setOldClass("AffymetrixCdfFile")
+
+setMethod("getProbePositionsDf", "AffymetrixCdfFile",
+    function(cdf, chrs = NULL, ..., verbose = TRUE)
+{
     require(aroma.affymetrix)
-
-	chrs <- paste( "chr", c(1:22,"X","Y","M"), sep="" )
-    names(chrs) <- 1:25
 	
-    ind <- getCellIndices(cdf,...,useNames=FALSE,unlist=TRUE,verbose=verbose)
+    ind <- getCellIndices(cdf, ..., useNames = FALSE, unlist = TRUE, verbose = verbose)
     acp <- AromaCellPositionFile$byChipType(getChipType(cdf))
     ch <- acp[ind,1,drop=TRUE]
     sp <- acp[ind,2,drop=TRUE]
+    if(is.null(chrs)) chrs <- ch else chrs <- chrs[ch]
 
-    data.frame(chr=chrs[as.character(ch)],position=sp,index=ind,stringsAsFactors=FALSE)
+    data.frame(chr = chrs,
+               position = sp,
+               index = ind,
+               stringsAsFactors = FALSE)
 })

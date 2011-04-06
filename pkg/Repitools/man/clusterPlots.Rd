@@ -1,24 +1,24 @@
 \name{clusterPlots}
 \alias{clusterPlots}
 \alias{clusterPlots,ClusteredCoverageList-method}
-\alias{clusterPlots,CoverageList-method}
+\alias{clusterPlots,ScoresList-method}
 
 \title{Visualisation of tables of feature coverages.}
 \description{
-  Takes the output of \link{featureCoverage}, or a modified version of it,
+  Takes the output of \link{featureScores}, or a modified version of it,
   and plots a heatmaps lineplots of clustered coverages.
 }
 \usage{
   \S4method{clusterPlots}{ClusteredCoverageList}(
      c.list, plot.ord = 1:length(c.list), plot.type = c("line", "heatmap"),
      cols = NULL, t.name = "Clustered Enrichment")
-  \S4method{clusterPlots}{CoverageList}(c.list, scale = function(x) x,
+  \S4method{clusterPlots}{ScoresList}(c.list, scale = function(x) x,
     cap.q = 0.95, cap.type = c("sep", "all"), n.clusters = 5,
     plot.ord = 1:length(c.list), expr, sort.data = NULL, sort.name = NULL,
     plot.type = c("line", "heatmap"), cols = NULL, t.name = "Clustered Enrichment")
 }
 \arguments{
-  \item{c.list}{A \linkS4class{CoverageList} or \linkS4class{ClusteredCoverageList}
+  \item{c.list}{A \linkS4class{ScoresList} or \linkS4class{ClusteredCoverageList}
                 object.}
   \item{scale}{A function to scale all the coverages by. Default : No scaling.}
   \item{cap.q}{The quantile of coverages above which to make any bigger coverages
@@ -38,14 +38,14 @@
                 drawn.}
 }
 \value{
-  If called with a \code{CoverageList}, then a \code{ClusteredCoverageList} is
+  If called with a \code{ScoresList}, then a \code{ClusteredCoverageList} is
   returned. If called with a \code{ClusteredCoverageList}, then nothing is returned.
 }
 \details{
   A \code{ClusteredCoverageList} should be created by the user, if they wish to do
   some custom clustering on the coverage matrices. Otherwise, if the user is happy
-  with k - means clustering, then the \code{CoverageList} object as output by
-  \code{featureCoverage()} can be directly used. If called with a \code{CoverageList},
+  with k - means clustering, then the \code{ScoresList} object as output by
+  \code{featureScores()} can be directly used. If called with a \code{ScoresList},
   then the matrices for each coverage type are joined, scaling and capping is done,
   and k-means clustering is performed to get the cluster membership of each feature.
   Then a \code{ClusteredCoverageList} object is created, and used. If called with a
@@ -65,11 +65,11 @@
   are not drawn side-by-side, as is the layout for the heatmaps. For this reason,
   sending the output to a PDF device is necessary. Since the coverage data between
   different marks is not comparable, this method is inappropriate for visualising a
-  \code{CoverageList} object. If the user, however, can come up with a normalisation
+  \code{ScoresList} object. If the user, however, can come up with a normalisation
   method to account for the differences that are apparent between different types
   (i.e. peaked vs. spread) of marks that makes the coverages meaningfully comparable,
   they can alter the tables, do their own clustering, and create a
   \code{ClusteredCoverageList} object with the modified tables.
 }
-\seealso{\code{\link{featureCoverage}} for generating coverage matrices.}
+\seealso{\code{\link{featureScores}} for generating coverage matrices.}
 \author{Dario Strbenac}

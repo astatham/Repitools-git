@@ -110,7 +110,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
     }
 })
 
-setMethod("clusterPlots", "CoverageList", function(c.list, scale = function(x) x,
+setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
           cap.q = 0.95, cap.type = c("sep", "all"), n.clusters = 5,
           plot.ord = 1:length(c.list), expr, sort.data = NULL, sort.name = NULL,
           plot.type = c("line", "heatmap"), cols = NULL, t.name = "Clustered Enrichment")
@@ -142,12 +142,12 @@ setMethod("clusterPlots", "CoverageList", function(c.list, scale = function(x) x
 	return(x)
     })
 
-	# Do the k-means clustering for all marks together.
+    # Do the k-means clustering for all marks together.
     set.seed(100)
     all <- do.call(cbind, cvgs)
     cl.id <- kmeans(all, n.clusters, iter.max = 100)$cluster
 
-    ccl <- ClusteredCoverageList(c.list, cvgs = cvgs, cluster.id = cl.id, expr = expr,
+    ccl <- ClusteredCoverageList(c.list, scores = cvgs, cluster.id = cl.id, expr = expr,
                                  sort.data = sort.data, sort.name = sort.name)
     clusterPlots(ccl, plot.ord = plot.ord, plot.type = plot.type, cols = cols,
                  t.name = t.name)

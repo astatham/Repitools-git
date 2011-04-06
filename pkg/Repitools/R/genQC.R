@@ -1,88 +1,93 @@
-.getAvgQScore <- function(cycTable){
-                                   totalCounts <- sum(cycTable[, "Count"])
-				   totalScore = 0
-				   for(index in 1:nrow(cycTable))
-				   	totalScore = totalScore + (cycTable[index, "Score"] * cycTable[index, "Count"])
-				   avg <- totalScore / totalCounts
-				   return(unlist(avg))
-                                  }
+setGeneric("genQC", signature = c("paths", "expt"), function(paths, expt)
+                                              {standardGeneric("genQC")})
 
-# paths : absoulte paths to folders of lanes for one experiment.
-# names : names of experiments.
-genQC <- function(paths, exptName, laneNames)
+.plotFreqs <- function(freqs, l.names, aligned)
 {
-	require(ShortRead)
-
-	tablesListList <- lapply(paths, function(path){
-                                        # First, the average quality score over the cycles.
-				    	QAfastq <- qa(path, "fastq.gz", "fastq")
-					sbCyc <- split(QAfastq[["perCycle"]][["quality"]], QAfastq[["perCycle"]][["quality"]][, "Cycle"])
-					avgScores <- sapply(sbCyc, .getAvgQScore)
-
-					# Percentage base calls over the cycles.
-					aligned <- readAligned(path, "uniq.map.gz", "Bowtie")
-					fastq <- readFastq(path, "fastq.gz")
-					freqBasesAll <- apply(alphabetByCycle(sread(fastq), c("G", "A", "T", "C", "N")), 2, function(aCol) aCol / sum(aCol))
-					freqBasesAligned <- apply(alphabetByCycle(sread(aligned), c("G", "A", "T", "C", "N")), 2, function(aCol) aCol / sum(aCol))
-					colnames(freqBasesAll) <- 1:ncol(freqBasesAll)
-					colnames(freqBasesAligned) <- 1:ncol(freqBasesAligned)
-
-					# Mismatch matrix over the cycles.
-					mmColumn <- aligned@alignData@data$mismatch
-					
-					# Make complements of negative strand sequences to get back to the original FASTQ sequence.
-					whichMapNeg <- which(strand(aligned) == '-')
-					mmColumn[whichMapNeg] <- gsub("G", "c", mmColumn[whichMapNeg])
-					mmColumn[whichMapNeg] <- gsub("C", "g", mmColumn[whichMapNeg])
-					mmColumn[whichMapNeg] <- gsub("A", "t", mmColumn[whichMapNeg])
-					mmColumn[whichMapNeg] <- gsub("T", "a", mmColumn[whichMapNeg])
-					mmColumn[whichMapNeg] <- toupper(mmColumn[whichMapNeg])
-
-					mmMatrix <- do.call(rbind, strsplit(unlist(strsplit(mmColumn, ",", fixed = TRUE)), ":", fixed = TRUE))
-					
-					mmTable <- table(mmMatrix[,2], factor(mmMatrix[,1], levels = as.character(0:35)))
-					mmTable <- apply(mmTable, 2, function(cycCol) cycCol / sum(cycCol))
-					colnames(mmTable) <- as.numeric(colnames(mmTable)) + 1
-					gc()
-
-					return(list(avgQual = avgScores, freqAll = freqBasesAll, freqAligned = freqBasesAligned, mmTable = mmTable))
-				    }
-                             )
-	names(tablesListList) <- laneNames
-	
-	pdf(paste("QC ", exptName, ".pdf", sep = ''), h = 8.3, w = 11.7)
-	avgQs <- sapply(tablesListList, function(tList) tList[[1]])
-	matplot(avgQs, type = "l", lty = 1, lwd = 2, col = 1:8, main = paste("Average Quality Over Cycles for", exptName), xlab = "Cycle", ylab = "Quality", ylim = c(15, 40))
-	legend("topright", legend = names(tablesListList), lty = 1, lwd = 2, col = 1:8)
-	layout(matrix(c(1:8), ncol = 4, byrow = TRUE))
-	invisible(mapply(function(tList, name){
-					     	matplot(y = t(tList[[2]]),  main = paste("All Bases For", name), xlab = "Cycle", ylab = "Base", type = "l", lty = 1, lwd = 2, xlim = c(1, 36), ylim = c(0.00, 0.40), new = TRUE)
-						abline(h = 0.25, col = "red")
-						legend("topright", legend = c("G", "A", "T", "C", "N"), lty = 1, lwd = 2, col = 1:5, cex = 0.5)
-					     }, tablesListList, names(tablesListList)
-			)
-                 )
-	layout(matrix(c(1:8), ncol = 4, byrow = TRUE))
-	invisible(mapply(function(tList, name){
-				     		matplot(y = t(tList[[3]]),  main = paste("Aligned Bases For", name), xlab = "Cycle", ylab = "Base", type = "l", lty = 1, lwd = 2, xlim = c(1, 36), ylim = c(0.00, 0.40))
-						abline(h = 0.25, col = "red")
-						legend("topright", legend = c("G", "A", "T", "C", "N"), lty = 1, lwd = 2, col = 1:5, cex = 0.5)
-					     }, tablesListList, names(tablesListList)
-			)
-		 )
-	par(oma = c(1, 1, 1, 1))
-	layout(matrix(c(1:4), ncol = 2, byrow = TRUE), widths=c(5,1))
-	invisible(mapply(function(tList, name){
-						par(mai = c(1,1.2,0.2,0.5))
-					     	matplot(y = t(tList[[4]]),  main = paste("Mismatches For", name), xlab = "Cycle", ylab = "Mismatch", type = "l", lty = rep(c(1, 2), each = 8), lwd = 2, xlim = c(1, 36), ylim = c(0.00, 1.00), col = c("black", "darkblue", "purple", "darkgreen", "cyan", "lightgreen", "red", "yellow"))
-						abline(v = 1:36, col = c("lightgrey", "darkgrey"))
-						par(mai = c(0,0,0.2,0))
-						plot.new()
-						legend("topleft", title = "Reference > Read", legend = rownames(tList[[4]]), lty = rep(c(1, 2), each = 8), lwd = 2, col = c("black", "darkblue", "purple", "darkgreen", "cyan", "lightgreen", "red", "yellow"))
-					     }, tablesListList, names(tablesListList)
-			)
-		)
-	dev.off()
-
-	return(tablesListList)
+  layout(matrix(c(1:8), ncol = 4, byrow = TRUE))
+    invisible(mapply(function(y, z){
+        matplot(y = y, main = paste(ifelse(aligned == TRUE, "Aligned", "All"),
+                                    "Bases For", z),
+                xlab = "Cycle", ylab = "Base", type = "l", lty = 1, lwd = 2,
+                xlim = c(1, nrow(y)), ylim = c(0.00, 0.40))
+        abline(h = 0.25, col = "red")
+        legend("topright", legend = c("G", "A", "T", "C", "N"), lty = 1, lwd = 2,
+               col = 1:5, cex = 0.5)
+    }, freqs, l.names))
 }
+
+setMethod("genQC", "character", 
+    function(paths, expt)
+{
+    if(is.null(names(paths)))
+        l.names <- paste("Lane", 1:length(paths))
+    else
+        l.names <- names(paths)
+
+    qual <- lapply(paths, function(x) get(load(x)))
+
+    n.reads <- lapply(qual, function(x)
+                   as.integer(Basic_Statistics(x, "Unaligned")[3, 2]))
+    n.aln <- lapply(qual, function(x)
+                 as.integer(Basic_Statistics(x, "Aligned")[3, 2]))
+
+    avg.q <- sapply(qual, function(x)
+                 Per_base_sequence_quality(x, "Unaligned")[, 2])
+
+    base.freq <- mapply(function(x, y)
+    {
+        cbind(Per_base_sequence_content(x, "Unaligned")[, 2:5] / y,
+              Per_base_N_content(x, "Unaligned")[, 2] / 100)
+    }, qual, n.reads, SIMPLIFY = FALSE)
+
+    base.freq.aln <- mapply(function(x, y)
+    {
+        cbind(Per_base_sequence_content(x, "Aligned")[, 2:5] / y,
+              Per_base_N_content(x, "Aligned")[, 2] / 100)
+    }, qual, n.aln, SIMPLIFY = FALSE)
+
+    mm.freqs <- lapply(qual, function(x)
+    {
+	mism <- Mismatches(x)[, 2:17]
+        t(apply(mism, 1, function(y) y / sum(y)))
+    })
+
+    dupls <- lapply(qual, function(x)
+    {
+	dupl <- Sequence_Duplication_Levels(x)
+	return(as.numeric(dupl[2:nrow(dupl), 2]))
+    })
+    
+    offset <- max(avg.q * 0.1)
+    y.lim <- c(min(avg.q) - offset, max(avg.q + offset))
+    matplot(avg.q, type = "l", lty = 1, lwd = 2, col = 1:8,
+        main = paste("Average Quality Over Cycles for", expt),
+        xlab = "Cycle", ylab = "Quality", ylim = y.lim)
+        legend("topright", legend = l.names, lty = 1, lwd = 2,
+               col = 1:length(l.names))
+    .plotFreqs(base.freq, l.names, FALSE)
+    .plotFreqs(base.freq.aln, l.names, TRUE)
+    par(oma = c(1, 1, 1, 1))
+    layout(matrix(c(1:4), ncol = 2, byrow = TRUE), widths=c(5,1))
+    invisible(mapply(function(y, z){
+        par(mai = c(1,1.2,0.2,0.5))
+        cols.mm <- c("black", "darkblue", "purple", "darkgreen", "cyan",
+                     "lightgreen", "red", "yellow")
+        matplot(y = y,  main = paste("Mismatches For", z), xlab = "Cycle",
+                ylab = "Percent of All Mismatches At Cycle", type = "l",
+                lty = rep(c(1, 2), each = 8), lwd = 2, xlim = c(1, nrow(y)),
+                ylim = c(0.00, 1.00), col = cols.mm)
+        abline(v = 1:nrow(y), col = c("lightgrey", "darkgrey"))
+        par(mai = c(0,0,0.2,0))
+        plot.new()
+        legend("topleft", title = "Reference > Read", legend = colnames(y),
+               lty = rep(c(1, 2), each = 8), lwd = 2, col = cols.mm)
+    }, mm.freqs, l.names))
+
+    layout(matrix(c(1:4), ncol = 2, byrow = TRUE))
+    invisible(mapply(function(y, z){
+        par(mai = c(0.5,0.5,0.5,0.5))
+        bar.x <- barplot(y,  main = paste("Duplication For", z),
+                        xlab = "Occurrences", ylab = "Relative Number", xaxt = 'n')
+        axis(1, at = bar.x, labels = c(1:9, "10+"), cex.axis = 0.5)
+    }, dupls, l.names))
+})

@@ -1,111 +1,117 @@
-.makeClusters <- function(scoresOnChr, wSize, cut, count = FALSE) {
-
-    mergeOverlaps <- function (query, subject) {
-        temp <- IRanges(slice(coverage(c(query, subject)), lower=1))
-        temp[countOverlaps(temp, query)>0]
-    }
-
-    clustersByColumn <- function(scoreByColumn) {
-                medianByColumn <- rollmedian(scoreByColumn, k = wSize, na.pad = TRUE)
-                mbc.cut <- medianByColumn > cut
-                mbc.cut[is.na(mbc.cut)] <- FALSE
-                mbc.2cut <- rollmean(as.integer(mbc.cut), k = wSize, na.pad = TRUE) > (2 / wSize)
-                mbc.2cut[is.na(mbc.2cut)] <- FALSE
-                sbc.cut <- scoreByColumn > 0
-
-                # Window extension.
-                mediansCut <- mbc.cut & mbc.2cut
-                extend <- sbc.cut
-                
-                extended <- mergeOverlaps(IRanges(mediansCut), IRanges(extend))
-                
-		# There must be at least 3 genes in an EAD / LRES region, by Saul's definition.
-                extended <- unique(extended[width(extended) >= 3])
-		
-                if (count == TRUE)
-		{
-			return(length(extended))
-		} else {
-			as.numeric(coverage(extended, width = length(scoreByColumn)))
-		}
-            }
-    
-    clusters <- numeric()
-    if(count == TRUE)
+.makeClusters <- function(scores.chr, w.size, n.med, n.consec, cut, count = FALSE,
+                          verbose)
+{
+    mergeOverlaps <- function(query, subject)
     {
-    	clusters <- apply(scoresOnChr, 2, clustersByColumn)
-    } else {
-    	clusters <- clustersByColumn(scoresOnChr[, 1])
+        candidates <- IRanges(slice(coverage(c(query, subject)), lower = 1))
+        candidates[countOverlaps(candidates, query) > 0]
     }
-    
-    return(clusters)
+
+    clusterScores <- function(x)
+    {
+        med.scores <- rollmedian(x, k = w.size, na.pad = TRUE)
+        med.cut <- med.scores > cut
+        med.cut[is.na(med.cut)] <- FALSE
+        med.cut.n <- rollmean(as.integer(med.cut), k = w.size, na.pad = TRUE) > (n.med / w.size)
+        med.cut.n[is.na(med.cut.n)] <- FALSE
+        score.cut <- x > 0
+
+        # Window extension.
+        mediansCut <- med.cut & med.cut.n
+                
+        cl.candidates <- mergeOverlaps(IRanges(mediansCut), IRanges(score.cut))
+                
+	# Minimum consecutive genes above score cutoff.
+        cl.final <- cl.candidates[width(cl.candidates) >= n.consec]
+		
+        if(count == TRUE)
+	    length(cl.final)
+	else
+	    as.numeric(coverage(cl.final, width = length(x)))
+    }
+
+    if(count == TRUE)
+    	apply(scores.chr, 2, clusterScores)
+    else
+    	clusterScores(scores.chr[, 1])
 }
 
-findClusters <- function(statsTable, posCol, scoreCol, windowSize = 5, cutoff = 0.05, trend = c("down", "up"), nPermutations = 100, getFDRs = FALSE, verbose = TRUE)
+findClusters <- function(stats, score.col, w.size = 5, n.med, n.consec, cut.samps,
+                         maxFDR = 0.05, trend = c("down", "up"), n.perm = 100,
+                         getFDRs = FALSE, verbose = TRUE)
 {
     require(IRanges)
     require(zoo)
     trend <- match.arg(trend)
     
-    # Do check in case users pass in some rows with NA scores. For biological meaningfulness.
-    statsTable <- statsTable[!is.na(statsTable[, scoreCol]), ]
+    # Do check in case users pass in some rows with NA scores.
+    stats <- stats[!is.na(stats[, score.col]), ]
 
-    scoreVect <- numeric()
+    # Simplifies processing in .makeClusters.
     if(trend == "down")
-    {
-        scoreVect = -statsTable[, scoreCol]
-    } else {
-        scoreVect = statsTable[, scoreCol]
-    }
+        scores <- -stats[, score.col]
+    else
+        scores <- stats[, score.col]
+    cut.abs <- abs(cut.samps)
 
-    perms <- 1:nPermutations
-    scoresByChr <- split(data.frame(scoreVect, sapply(perms, function(x) scoreVect[sample(nrow(statsTable))])), statsTable$chr)
+    perms <- 1:n.perm
+    perm.scores <- sapply(perms, function(x) scores[sample(nrow(stats))])
+    # Column 1 : Real Scores. Columns following : Permuted scores.
+    chr.scores <- split(data.frame(scores, perm.scores), stats$chr)
 
-    scoreMedCutoffs <- seq(1, 10, 0.05)
-    
-    clustersAtCutoffs <- lapply(scoreMedCutoffs, function(aCutoff) {
-                                                                   regionCounts <- colSums(do.call(rbind, lapply(scoresByChr, .makeClusters, windowSize, aCutoff, TRUE)))
-								   return(c(realCount = regionCounts[1], randCount = round(mean(regionCounts[2:length(regionCounts)]))))
-                                                                   })
+    # Find the number of clusters at each cutoff, in the real and permuted data.
+    clusts <- lapply(cut.abs, function(x){
+                     if(verbose == TRUE) message("Counting clusters at cutoff ", x)
+                     n.clusts.chrs <- lapply(chr.scores, .makeClusters, w.size,
+                                             n.med, n.consec, x, TRUE, verbose)
+                     n.clusts <- colSums(do.call(rbind, n.clusts.chrs))
+                     
+                     # Element 1 : Number of clusters in real data.
+                     # Element 2 : Average number of clusters in permuted scores.
+                     return(c(n.clusts[1], round(mean(n.clusts[2:length(n.clusts)]))))
+                     })
 
+    # Find the FDR of each cutoff tried.
+    allFDR <- sapply(clusts, function(x)
+                    {
+                        FDR <- x[2] / x[1]
+                        if((is.nan(FDR))) # 0 / 0 case
+                            FDR = 0
+                        FDR
+                    })
 
-    allFDR <- sapply(clustersAtCutoffs, function(clustersPerCutoff) {
-                  currFDR <- clustersPerCutoff[2] / clustersPerCutoff[1]
-                  if((is.nan(currFDR))) # 0 / 0 case
-                      currFDR = 0
-                  return(currFDR)
-                  })
-
-    FDRtable <- data.frame(cutoff = scoreMedCutoffs, FDR = allFDR)
-    chosenCutoff <- scoreMedCutoffs[match(TRUE, allFDR < cutoff)]
+    FDRtable <- data.frame(cutoff = cut.samps, FDR = allFDR)
+    best.cut <- cut.abs[match(TRUE, allFDR < maxFDR)]
     
     if(verbose == TRUE)
-        cat("Using the cutoff", chosenCutoff, "for a FDR of <", cutoff, "\n")
+        message("Using the cutoff ", ifelse(trend == "up", best.cut, -best.cut),
+                " for a FDR of < ", maxFDR)
 
-    clusterCol <- unlist(lapply(scoresByChr, function(scoresOnChr) .makeClusters(scoresOnChr, windowSize, chosenCutoff)))
+    in.clust <- unlist(lapply(chr.scores,
+                              function(x) .makeClusters(x, w.size, n.med, n.consec,
+                                                        best.cut)
+                      ))
 
-    clusterNum = 1
-    for(index in 2:length(clusterCol))
+    # Join adjoining clusters, keeping consecutive indexing.
+    cl.index = 1
+    for(i in 2:length(in.clust))
     {
-    	if(clusterCol[index - 1] == 0 && clusterCol[index] > 0)
+    	if(in.clust[i - 1] == 0 && in.clust[i] > 0)
 	{
-		clusterCol[index] = clusterNum
-	} else if(clusterCol[index - 1] > 0 && clusterCol[index] > 0)
+		in.clust[i] = cl.index
+	} else if(in.clust[i - 1] > 0 && in.clust[i] > 0)
 	{
-		clusterCol[index] = clusterNum
-	} else if((clusterCol[index - 1] > 0 && clusterCol[index] == 0))
+		in.clust[i] = cl.index
+	} else if((in.clust[i - 1] > 0 && in.clust[i] == 0))
 	{
-		clusterNum = clusterNum + 1
+		cl.index = cl.index + 1
 	}
     }
 
-    statsTable$cluster <- clusterCol
+    stats$cluster <- in.clust
 
     if(getFDRs == TRUE)
-    {
-    	return(list(table = statsTable, FDRs = FDRtable))
-    } else {
-    		return(statsTable)
-    }
-    
+    	list(table = stats, FDRs = FDRtable)
+    else
+    	stats
 }

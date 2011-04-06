@@ -1,25 +1,45 @@
 \name{annotationCounts}
 \alias{annotationCounts}
-\alias{annotationCounts,GenomeDataList-method}
-\alias{annotationCounts,GRangesList-method}
+\alias{annotationCounts,ANY,data.frame-method}
+\alias{annotationCounts,ANY,GRanges-method}
 \title{Counts the number of sequencing reads surrounding supplied annotations}
 \description{
-Counts the number of sequencing reads surrounding supplied annotations
+  Counts are made in windows with boundaries fixed distances either side of a
+  reference point.
 }
-\usage{
-  \S4method{annotationCounts}{GenomeDataList}(rs, annotation, bpUp, bpDown, seqLen = NULL, verbose=TRUE)
-  \S4method{annotationCounts}{GRangesList}(rs, annotation, bpUp, bpDown, seqLen = NULL, verbose=TRUE)
+\section{Usage}{
+  \describe{
+    \code{annotationCounts(x, anno, ...)}
+  }
 }
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-  \item{rs}{A \code{GenomeData} or \code{GenomeDataList} object}
-  \item{annotation}{a \code{data.frame} with required elements \code{chr} (character),  \code{start} (integer), \code{end} (integer) and optional elements \code{strand} ("+" or "-") and \code{name} (character)}
-  \item{bpUp}{The number of bases upstream to look}
-  \item{bpDown}{The number of bases downstream to look}
-  \item{seqLen}{If sequencing reads need to be extended, the fragment size to be used}
-  \item{verbose}{logical, whether to print progress}
+\section{Arguments}{
+  \describe{
+    \item{x:}{A character vector of BAM paths, a \code{GenomeDataList},
+             \code{GRangesList}, or \code{GRanges} object.}
+    \item{anno:}{A set of genomic features to make windows around a reference point of
+               theirs. Either a \code{data.frame} with (at least) colums \code{chr},
+               \code{start}, and \code{end}, or a \code{GRanges} object.}
+    \item{up:}{The number of bases upstream to look.}
+    \item{down:}{The number of bases downstream to look.}
+    \item{seq.len:}{If sequencing reads need to be extended, the fragment size to be
+                   used. Default: NULL (no extension).}
+    \item{verbose:}{Whether to print progress. Default: TRUE.}
+    \item{...:}{Parameters described above, that are not used in the function called,
+               but are passed further into a private function that uses them in its
+               processing.}
+  }
 }
-\value{A \code{matrix} of counts is returned, one column per \code{GenomeData} object supplied in \code{rs}, one row per \code{annotation} supplied}
+\value{A \code{matrix} of counts is returned, one column per sample and one row
+       per row of genomic features supplied.}
+\details{
+    If the genomic features annotation contains all unstranded features, the
+    \code{up} and \code{down} distances refer to how far towards the start of
+    a chromosome, and how far towards the end to make the counting window
+    boundaries. If the annotation is all stranded, then the \code{up} and
+    \code{down} distances are relative to the TSS of the features.
+}
 \author{Aaron Statham}
 \seealso{\code{\link{annotationBlocksCounts}}, \code{\link{genomeBlocks}}}
-\examples{#See the manual}
+\examples{
+    #See the manual
+}

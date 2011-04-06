@@ -2,7 +2,7 @@
 \docType{class}
 \alias{ClusteredCoverageList}
 \alias{ClusteredCoverageList-class}
-\alias{ClusteredCoverageList,CoverageList-method}
+\alias{ClusteredCoverageList,ScoresList-method}
 \alias{show,ClusteredCoverageList-method}
 \alias{[,ClusteredCoverageList-method}
 
@@ -13,7 +13,7 @@
 
   This allows \code{\link{clusterPlots}} to be called multiple times without
   having to redo the clustering each time. It also allows the user to take
-  the \code{\linkS4class{CoverageList}} output of \code{\link{featureCoverage}},
+  the \code{\linkS4class{ScoresList}} output of \code{\link{featureScores}},
   and do their own custom clustering on the coverage matrices, then save the
   clustering results in this container.
 }
@@ -24,8 +24,8 @@
                                     sort.name = NULL, sort.data = NULL)}
 	Creates a ClusteredCoverageList object.
 	\describe{
-	    \item{\code{x}}{A \code{\linkS4class{CoverageList}} object.}
-	    \item{\code{cvgs}}{A list of coverage matrices.}
+	    \item{\code{x}}{A \code{\linkS4class{ScoresList}} object.}
+	    \item{\code{scores}}{A list of coverage matrices.}
 	    \item{\code{expr}}{A numeric vector, same length as number of
                                rows of every coverage matrix.}
 	    \item{\code{cluster.id}}{A vector, same length as number of

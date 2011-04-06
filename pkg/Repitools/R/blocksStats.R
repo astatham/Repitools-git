@@ -1,212 +1,195 @@
 setOldClass("AffymetrixCelSet")
 
-setGeneric("blocksStats", signature = "x", function(x, ...){standardGeneric("blocksStats")})
+setGeneric("blocksStats", function(x, anno, ...){standardGeneric("blocksStats")})
+setGeneric(".blocksStats", function(x, anno, ...){standardGeneric(".blocksStats")})
 
-.blocksStats <- function(diffs, coordinatesTable, design, upStream, downStream, verbose, robust=FALSE, minNRobust, adjustMethod, useAsRegions, annot)
-{       
-  means <- tstats <- matrix(NA, nr=nrow(coordinatesTable), nc=ncol(diffs), dimnames=list(NULL,colnames(design)))
-  df <- rep(0,nrow(coordinatesTable))
-
-  for(i in 1:nrow(coordinatesTable)) {
-    vind <- annot[[1]][[i]]
-    vind <- unique(vind[!is.na(vind)])
-    if( length(vind) < 2 )
-      next
-        for(j in 1:ncol(diffs)) {
-          if( robust & length(vind) >= minNRobust ) {
-            require(MASS)
-        rf <- summary(rlm(diffs[vind,j]~1))
-        tstats[i,j] <- rf$coef[3]
-            means[i,j] <- rf$coef[1]
-        df[i] <- rf$df[2]
-          } else {
-        tt <- t.test(diffs[vind,j])
-        tstats[i,j] <- tt$statistic
-            means[i,j] <- tt$estimate
-        df[i] <- tt$parameter
-          }
-        }
-  }
-
-  pvals <- 2*pt(-abs(tstats),df)
-  
-  # adjust p-values for multiple testing
-  adjpvals <- pvals
-  for(i in 1:ncol(pvals))
-    adjpvals[,i] <- p.adjust(pvals[,i],method=adjustMethod)
-  
-  xDf <- data.frame(df=df, meandiff=means, tstats=tstats, pvals=pvals, adjpvals=adjpvals)
-  if(useAsRegions == TRUE)
-        {
-                colnames(xDf)[1] <- "df"        
-        }
-        else
-        {
-                colnames(xDf)[1] <- paste("df",upStream,downStream,sep=".")
-        }
-        
-  if( ncol(xDf)==5 )
-    colnames(xDf)[2:5] <- paste(c("meandiff","tstats","pvals","adjpvals"), gsub(".[1-9]$","",colnames(xDf)[2:5]), sep=".")
-   
-
-  cbind(coordinatesTable,xDf)
-}
-
-setMethod("blocksStats", "AffymetrixCelSet", function(x, coordinatesTable, annot=NULL, probePositions = NULL, design, upStream=0, downStream=2000, verbose=TRUE, robust=FALSE, minNRobust=10, adjustMethod="fdr", log2adjust=TRUE, useAsRegions=FALSE, ...)
+setMethod(".blocksStats", c("matrix", "GRanges"),
+    function(x, anno, up, down, p.anno = NULL, mapping = NULL, log2.adj = TRUE,
+             design, robust = 0, p.adj = "fdr", verbose = TRUE)
 {
-	require(aroma.affymetrix)
+    if(nrow(design) != ncol(x))
+        stop("The number of rows in the design matrix does not equal
+              the number of columns in the probes data matrix.\n")
 
-  # x - AffymetrixCelSet to read probe-level data from
-  # coordinatesTable - data frame giving genome coordinates or regions of interest coordinates
-  # ind - (optional) 
-  # dmP - data matrix of probes
-  
-  if( nrow(design) != nbrOfArrays(x) )
-    stop("The number of rows in the design matrix does not equal the number of columns in the probes data matrix")
-  
-  
-	w <- which( rowSums(design != 0) > 0 )
-	x <- extract(x, w, verbose=verbose)
-	
-	if(is.null(annot))
-	{
-		probePositions <- getProbePositionsDf( getCdf(x), verbose=verbose )
-		if(useAsRegions == TRUE)
-		{
-			if(!all(c("chr", "name", "start", "end")  %in% colnames(coordinatesTable)))
-				stop("Incorrect column headings for coordinatesTable. Check documentation for details.")  
-			annot <- annotationBlocksLookup(probePositions, coordinatesTable, verbose=verbose)
-		}
-		else
-		{
-			if(!all(c("chr", "name", "start", "end", "strand")  %in% colnames(coordinatesTable)))
-				stop("Incorrect column headings for coordinatesTable. Check documentation for details.")  
-																											
-			# run lookup twice.  first to get a list of smaller list of probes to use
-			annot <- annotationLookup(probePositions, coordinatesTable, upStream, downStream, verbose=verbose)
-			pb <- unique(unlist(annot$indexes, use.names=FALSE))
-			probePositions <- probePositions[pb,]
-			annot <- annotationLookup(probePositions, coordinatesTable, upStream, downStream, verbose=verbose)
-		}
-	}
-
-	dmP <- extractMatrix(x, cells=probePositions$index, verbose=verbose)
-	if(log2adjust == TRUE)
-	{
-		diffs <- log2(dmP) %*% design[w,]
-	}
-	else
-	{
-		diffs <- dmP %*% design[w,]
-	}
-	
-	return(.blocksStats(diffs, coordinatesTable, design, upStream, downStream, verbose, robust, minNRobust, adjustMethod, useAsRegions, annot))
-  
-})
-
-setMethod("blocksStats", "GenomeDataList", function(x, coordinatesTable, design, upStream=0, downStream=2000, verbose=TRUE, useAsRegions=FALSE, seqLen=NULL, libSize="lane", Acutoff=NULL, ...) {
-	if(libSize == "ref" && is.null(Acutoff))
-		stop("Must give value of Acutoff if using \"ref\" normalisation.\n")
-	require(edgeR)
-	if(!all(c("chr", "name", "start", "end")  %in% colnames(coordinatesTable)))
-		stop("Incorrect column headings for coordinatesTable. Check documentation for details.")
-	if (verbose) cat("Generating table of counts\n")
-	if (useAsRegions) dm <- annotationBlocksCounts(x, coordinatesTable, seqLen, verbose) else dm <- annotationCounts(x, coordinatesTable, upStream, downStream, seqLen, verbose)
-	if (libSize == "lane")
-		lib.sizes <- laneCounts(x)
-	if(libSize == "inRegions")
-		lib.sizes <- colSums(dm)
-	if(libSize == "ref")
-		lib.sizes <- colSums(dm) * calcNormFactors(dm, Acutoff=Acutoff)
-	
-    dmRes <- cbind(coordinatesTable, dm)
-    for (i in 1:ncol(design)) {
-		if (verbose) cat("Processing column",i,"of design matrix\n")
-		stopifnot(sum(design[,i]==1)>0, sum(design[,i]==-1)>0, all(design[,i] %in% c(-1,0,1)))
-		thisCol <- design[,i]!=0
-		d <- DGEList(counts=dm[,thisCol], group=as.character(design[thisCol,i]), lib.size=lib.sizes[thisCol])
-		d.disp <- estimateCommonDisp(d)
-		tmp <- d.disp$pseudo.alt
-		colnames(tmp) <- paste(colnames(tmp), "pseudo",sep="_")
-		dmRes <- merge(dmRes, tmp, all.x=TRUE, by.x="name", by.y="row.names")
-		deD <- exactTest(d.disp, pair = c("-1","1"))
-		de <- topTags(deD, n=nrow(deD$table))@.Data[[1]]
-		colnames(de) <- paste(colnames(de), colnames(design)[i], sep="_")
-		dmRes <- merge(dmRes, de, all.x = TRUE, by.x = "name", by.y = "row.names")
-	}
-	dmRes[match(coordinatesTable$name, dmRes$name),]
-})
-
-setMethod("blocksStats", "GRangesList", function(x, coordinatesTable, design, upStream=0, downStream=2000, verbose=TRUE, useAsRegions=FALSE, seqLen=NULL, libSize="lane", Acutoff=NULL, ...) {
-	if(libSize == "ref" && is.null(Acutoff))
-		stop("Must give value of Acutoff if using \"ref\" normalisation.\n")
-	require(edgeR)
-	if(!all(c("chr", "name", "start", "end")  %in% colnames(coordinatesTable)))
-		stop("Incorrect column headings for coordinatesTable. Check documentation for details.")
-	if (verbose) cat("Generating table of counts\n")
-	if (useAsRegions) dm <- annotationBlocksCounts(x, coordinatesTable, seqLen, verbose) else dm <- annotationCounts(x, coordinatesTable, upStream, downStream, seqLen, verbose)
-	if (libSize == "lane")
-		lib.sizes <- elementLengths(x)
-	if(libSize == "inRegions")
-		lib.sizes <- colSums(dm)
-	if(libSize == "ref")
-		lib.sizes <- colSums(dm) * calcNormFactors(dm, Acutoff=Acutoff)
-	
-    dmRes <- cbind(coordinatesTable, dm)
-    for (i in 1:ncol(design)) {
-		if (verbose) cat("Processing column",i,"of design matrix\n")
-		stopifnot(sum(design[,i]==1)>0, sum(design[,i]==-1)>0, all(design[,i] %in% c(-1,0,1)))
-		thisCol <- design[,i]!=0
-		d <- DGEList(counts=dm[,thisCol], group=as.character(design[thisCol,i]), lib.size=lib.sizes[thisCol])
-		d.disp <- estimateCommonDisp(d)
-		tmp <- d.disp$pseudo.alt
-		colnames(tmp) <- paste(colnames(tmp), "pseudo",sep="_")
-		dmRes <- merge(dmRes, tmp, all.x=TRUE, by.x="name", by.y="row.names")
-		deD <- exactTest(d.disp, pair = c("-1","1"))
-		de <- topTags(deD, n=nrow(deD$table))@.Data[[1]]
-		colnames(de) <- paste(colnames(de), colnames(design)[i], sep="_")
-		dmRes <- merge(dmRes, de, all.x = TRUE, by.x = "name", by.y = "row.names")
-	}
-	dmRes[match(coordinatesTable$name, dmRes$name),]
-})
-
-setMethod("blocksStats", "matrix", function(x, ndf, coordinatesTable, annot=NULL, probePositions=NULL, design, upStream=0, downStream=2000, verbose=TRUE, robust=FALSE, minNRobust=10, adjustMethod="fdr", log2adjust=TRUE, useAsRegions=FALSE, ...)
-{
-	if( nrow(design) != ncol(x) )
-		stop("The number of rows in the design matrix does not equal the number of columns in the probes data matrix.")
+    if(nrow(x) != nrow(p.anno))
+        stop("Number of rows in probe annotation and intensity matrix differ.\n")
 		
-	w <- which( rowSums(design != 0) > 0 )
+    used <- which(rowSums(design != 0) > 0)
 	
-	if(is.null(annot))
-	{
-		probePositions <- data.frame(chr = ndf$chr, position = ndf$position, index = ndf$index, stringsAsFactors=FALSE)
-	
-		if(useAsRegions == TRUE)
-		{
-			if(!all(c("chr", "name", "start", "end")  %in% colnames(coordinatesTable)))
-				stop("Incorrect column headings for coordinatesTable. Check documentation for details.")
-			annot <- annotationBlocksLookup(probePositions, coordinatesTable)
-		}
-		else
-		{	
-			if(!all(c("chr", "name", "start", "end", "strand")  %in% colnames(coordinatesTable)))
-				stop("Incorrect column headings for coordinatesTable. Check documentation for details.")
-	
-			# run lookup twice.  first to get a list of smaller list of probes to use
-			annot <- annotationLookup(probePositions, coordinatesTable, upStream, downStream, verbose=verbose)
-			pb <- unique(unlist(annot$indexes, use.names=FALSE))
-			probePositions <- probePositions[pb,]
-			annot <- annotationLookup(probePositions, coordinatesTable, upStream, downStream, verbose=verbose)
-		}
-	}
+    if(is.null(mapping))
+    {	
+        ind.col <- colnames(p.anno) == "index"
+        if(all(ind.col == FALSE))
+            stop("'index' column missing from probe annotation.\n")
+        if(!"name" %in% colnames(elementMetadata(anno)))
+            stop("'name' column missing from annotation.\n")
 
-	if(log2adjust == TRUE)
-	{						
-		diffs <- log2(x[probePositions$index, , drop = FALSE]) %*% design[w,]
-	} else {
-		diffs <- x[probePositions$index, , drop = FALSE] %*% design[w,]
-	}
+        # Run lookup twice. First to get a list of smaller list of probes to use.
+	if(is.null(up))
+            mapping <- annotationBlocksLookup(p.anno[, !ind.col], anno,
+                                              verbose = verbose)
+        else
+            mapping <- annotationLookup(p.anno[, !ind.col], anno, up, down,
+                                        verbose = verbose)
+	p.used <- unique(unlist(mapping$indexes, use.names = FALSE))
+	p.anno <- p.anno[p.used, ]
+	if(is.null(up))
+            mapping <- annotationBlocksLookup(p.anno[, !ind.col], anno,
+                                              verbose = verbose)
+        else
+            mapping <- annotationLookup(p.anno[, !ind.col], anno, up, down,
+                                        verbose = verbose)
+    }
 
-	return(.blocksStats(diffs, coordinatesTable, design, upStream, downStream, verbose, robust, minNRobust, adjustMethod, useAsRegions, annot))
-  }
-)
+    if(log2.adj == TRUE)
+        intens <- log2(x[p.anno$index, used])
+    else
+        intens <- x[p.anno$index, used]
+
+    diffs <- intens %*% design[used, , drop = FALSE]
+
+    means <- t.stats <- matrix(NA, nrow = length(anno), ncol = ncol(diffs),
+                              dimnames = list(NULL, colnames(design)))
+    df <- rep(0, length(anno))
+
+    for(i in 1:length(anno))
+    {
+        pr.inds <- mapping[[1]][[i]]
+        pr.inds <- unique(pr.inds[!is.na(pr.inds)])
+        if(length(pr.inds) < 2)
+            next
+        for(j in 1:ncol(diffs))
+        {
+            if(robust && length(pr.inds) >= robust)
+            {
+                require(MASS)
+                r.model <- summary(rlm(diffs[pr.inds, j] ~ 1))
+                t.stats[i, j] <- r.model$coef[3]
+                means[i, j] <- r.model$coef[1]
+                df[i] <- r.model$df[2]
+            } else {
+                    t.vals <- t.test(diffs[pr.inds, j])
+                    t.stats[i, j] <- t.vals$statistic
+                    means[i, j] <- t.vals$estimate
+                    df[i] <- t.vals$parameter
+            }
+        }
+    }
+
+    p.vals <- 2 * pt(-abs(t.stats), df)
+  
+    # Adjust p-values for multiple testing.
+    adj.p <- p.vals
+    for(i in 1:ncol(adj.p))
+        adj.p[, i] <- p.adjust(p.vals[, i], method = p.adj)
+  
+    results <- data.frame(df = df, mean.diff = means, t.stats = t.stats,
+                          p.vals = p.vals, adj.p.vals = adj.p)
+
+    if(is.null(up))
+        colnames(results)[1] <- "df"        
+    else
+        colnames(results)[1] <- paste("df", up, down, sep = '.')
+    
+    if(ncol(design) == 1)    
+        colnames(results)[2:5] <- paste(c("meandiff", "t.stats", "p.vals",
+                                  "adj.p.vals"), gsub(".[1-9]$", '',
+                                  colnames(results)[2:5]), sep = '.')
+
+    cbind(.annoGR2DF(anno), results)
+})
+
+setMethod(".blocksStats", c("AffymetrixCelSet", "GRanges"),
+    function(x, anno, up, down, p.anno = NULL, chrs = NULL, mapping = NULL, design, ...)
+{
+    require(aroma.affymetrix)
+
+    if(nrow(design) != nbrOfArrays(x))
+        stop("The number of rows in the design matrix does not equal the number
+              of arrays in the CEL set.\n")
+
+    used <- which(rowSums(design != 0) > 0)
+    x <- extract(x, used, verbose = verbose)
+
+    if(is.null(mapping) && is.null(p.anno))
+        p.anno <- getProbePositionsDf(getCdf(x), chrs, verbose = verbose)
+    intens <- extractMatrix(x, cells = p.anno$index, verbose = verbose)
+    p.anno$index <- 1:nrow(p.anno)
+
+    .blocksStats(intens, anno, up, down, p.anno, mapping,
+                 design = design[used, , drop = FALSE], ...)
+})
+
+setMethod(".blocksStats", c("GRangesList", "GRanges"),
+    function(x, anno, up, down, seq.len = NULL, design, lib.size = "lane",
+             Acutoff = NULL, p.adj = "fdr", verbose = TRUE)
+{
+    require(edgeR)
+
+    if(lib.size == "ref" && is.null(Acutoff))
+        stop("Must give value of Acutoff if using \"ref\" normalisation.\n")
+
+    if (is.null(up))
+        counts <- annotationBlocksCounts(x, anno, seq.len, verbose)
+    else
+        counts <- annotationCounts(x, anno, up, down, seq.len, verbose)
+	
+    lib.sizes <- switch(lib.size,
+                        lane = elementLengths(x),
+                        blocks = colSums(counts),
+                        ref = colSums(counts) * calcNormFactors(counts,
+                              Acutoff = Acutoff))
+    annoDF <- .annoGR2DF(anno)
+    results <- cbind(annoDF, counts)
+    for (i in 1:ncol(design))
+    {
+	if (verbose == TRUE)
+            message("Processing column ", i, " of design matrix.\n")
+	stopifnot(sum(design[,i] ==  1) > 0,
+                  sum(design[,i] == -1) > 0,
+                  all(design[,i] %in% c(-1, 0, 1)))
+	used <- design[, i] != 0
+	dge <- DGEList(counts = counts[,used],
+                     group = as.character(design[used, i]),
+                     lib.size = lib.sizes[used])
+	dge <- estimateCommonDisp(dge)
+	pseudo.counts <- dge$pseudo.alt
+	colnames(pseudo.counts) <- paste(colnames(pseudo.counts), "pseudo",
+                                         sep = '_')
+	results <- cbind(results, pseudo.counts)
+	de.stats <- exactTest(dge, pair = c("-1", "1"))$table
+        adj.p.vals <- p.adjust(de.stats[, 3], p.adj)
+        de.stats <- cbind(de.stats, adj.p.vals)
+	colnames(de.stats) <- paste(colnames(de.stats), colnames(design)[i],
+                                    sep = "_")
+
+	results <- cbind(results, de.stats)
+    }
+    results
+})
+
+setMethod(".blocksStats", c("GenomeDataList", "GRanges"),
+    function(x, anno, ...)
+{
+    .blocksStats(GDL2GRL(x), anno, ...)
+})
+
+setMethod(".blocksStats", c("character", "GRanges"),
+    function(x, anno, ...)
+{
+    .blocksStats(BAM2GRangesList(x), anno, ...)
+})
+
+setMethod("blocksStats", c("ANY", "GRanges"),
+    function(x, anno, up = NULL, down = NULL, ...)
+{
+    if(!is.null(up) && !is.null(down))
+        invisible(.validate(anno, up, down))
+    .blocksStats(x, anno, up, down, ...)
+})
+
+setMethod("blocksStats", c("ANY", "data.frame"),
+    function(x, anno, ...)
+{
+    blocksStats(x, .annoDF2GR(anno), ...)
+})
