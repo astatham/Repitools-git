@@ -3,7 +3,7 @@ setGeneric("cpgDensityCalc", function(x, ...) standardGeneric("cpgDensityCalc"))
 setMethod("cpgDensityCalc", "GenomeDataList",
 function(x, ...)
 {
-    cpgDensityCalc(.GDL2GRL(x), ...)
+    cpgDensityCalc(GDL2GRL(x), ...)
 })
 
 

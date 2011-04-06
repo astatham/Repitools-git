@@ -26,6 +26,6 @@ setMethod("mergeReplicates", "GenomeDataList", function(reads, types, verbose = 
 	if(length(types) != length(reads))
 		stop("'types' and 'reads' lengths differ.\n")
 
-	reads <- .GDL2GRL(reads)
+	reads <- GDL2GRL(reads)
 	mergeReplicates(reads, types, verbose)
 })

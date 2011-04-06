@@ -1,7 +1,7 @@
 setGeneric("cpgDensityPlot", function(x, ...){standardGeneric("cpgDensityPlot")})
 
 setMethod("cpgDensityPlot", "GenomeDataList", function(x, ...) {
-    cpgDensityPlot(.GDL2GRL(x), ...)
+    cpgDensityPlot(GDL2GRL(x), ...)
 })
 
 setMethod("cpgDensityPlot", "GRangesList", function(x, cols=rainbow(length(x)), xlim=c(0,20), lty = 1, lwd = 1, main="CpG Density Plot", verbose=TRUE, ...) {

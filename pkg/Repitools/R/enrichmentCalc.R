@@ -3,7 +3,7 @@ setGeneric("enrichmentCalc", function(x, ...) standardGeneric("enrichmentCalc"))
 setMethod("enrichmentCalc", "GenomeDataList",
     function(x, ...)
 {
-    enrichmentCalc(.GDL2GRL(x), ...)
+    enrichmentCalc(GDL2GRL(x), ...)
 })
 
 setMethod("enrichmentCalc", "GRangesList",
