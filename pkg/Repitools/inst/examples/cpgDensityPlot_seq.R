@@ -2,7 +2,7 @@ library(Repitools)
 library(BSgenome.Hsapiens.UCSC.hg18)
 
 # load a saved GRangesList
-load("/home/data/Public/Ruike_MeDIPSeq/grl.Rdata")
+load("/home/data/Public/Ruike_MeDIPSeq/grl_subset.Rdata")
 
 pdf("CDP.pdf",10,10)
 cpgDensityPlot(grl, cols = c("black", "red", "green","blue","orange"), 

@@ -39,5 +39,10 @@
 
 \author{Aaron Statham}
 \examples{
-#See examples in the manual.
+library(BSgenome.Hsapiens.UCSC.hg18)
+
+readsFile <- system.file("data","samplesList.Rdata", package="Repitools")
+load(readsFile)  # GRangesList of reads 'samplesList'
+
+enrichmentPlot(samplesList, seq.len=300, organism=Hsapiens, total.lib.size=FALSE)
 }

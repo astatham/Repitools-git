@@ -57,5 +57,21 @@ The option \code{plotType="boxplot"} is really only suitable for 1- or 2-group p
 }
 \author{Mark Robinson}
 \examples{
-  # See examples in manual.
+  annoFile <- system.file("data","chr21genes.csv", package="Repitools")
+  annoDF <- read.csv(annoFile)
+
+  readsFile <- system.file("data","samplesList.RData", package="Repitools")
+  load(readsFile)  # GRangesList of reads 'samplesList'
+  
+  exprFile <- system.file("data","expr.RData", package="Repitools")
+  load(exprFile)  # matrix of differential expression 'expr'
+
+  # design matrix
+  des <- matrix( c(0,1,0,-1), ncol=1, dimnames=list(names(samplesList),"PC-Norm") )
+
+  binPlots(samplesList, annoDF, design=des, verbose=TRUE, seqLen=300, nbins=4,
+           ordering=expr, ordLabel="expression",plotType="line")
+
+  binPlots(samplesList, annoDF, design=des, verbose=TRUE, seqLen=300, nbins=8,
+           ordering=expr, ordLabel="expression",plotType="heatmap")
 }
