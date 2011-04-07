@@ -60,10 +60,10 @@ The option \code{plotType="boxplot"} is really only suitable for 1- or 2-group p
   annoFile <- system.file("data","chr21genes.csv", package="Repitools")
   annoDF <- read.csv(annoFile)
 
-  readsFile <- system.file("data","samplesList.Rdata", package="Repitools")
+  readsFile <- system.file("data","samplesList.RData", package="Repitools")
   load(readsFile)  # GRangesList of reads 'samplesList'
   
-  exprFile <- system.file("data","expr.Rdata", package="Repitools")
+  exprFile <- system.file("data","expr.RData", package="Repitools")
   load(exprFile)  # matrix of differential expression 'expr'
 
   # design matrix

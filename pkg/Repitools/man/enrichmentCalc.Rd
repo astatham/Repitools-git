@@ -34,7 +34,7 @@
 \examples{
 library(BSgenome.Hsapiens.UCSC.hg18)
 
-readsFile <- system.file("data","samplesList.Rdata", package="Repitools")
+readsFile <- system.file("data","samplesList.RData", package="Repitools")
 load(readsFile)  # GRangesList of reads 'samplesList'
 
 tc <- enrichmentCalc(samplesList, seqLen=300, organism=Hsapiens)

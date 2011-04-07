@@ -30,7 +30,7 @@
 \examples{
 library(BSgenome.Hsapiens.UCSC.hg18)
 
-readsFile <- system.file("data","samplesList.Rdata", package="Repitools")
+readsFile <- system.file("data","samplesList.RData", package="Repitools")
 load(readsFile)  # GRangesList of reads 'samplesList'
 
 cpgDensityPlot( samplesList, seqLen=300, organism=Hsapiens, lwd=4, verbose=TRUE)
