@@ -9,7 +9,7 @@
 }
 \arguments{
   \item{paths}{A vector of character strings, each containing an absolute path
-               to an Rdata file of a \code{\linkS4class{SequenceQC}} object.}
+               to an RData file of a \code{\linkS4class{SequenceQC}} object.}
   \item{expt}{The names of the experiments which the lanes are about.}
 }
 \value{
@@ -26,7 +26,7 @@
   FastQC: \url{http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/}
 }
 \examples{
-	# Not given.
+  #data.path <- system.file("data", package = "Repitools")
+  #qc.files <- list.files(data.path, "QC", full.names = TRUE)
+  #genQC(qc.files, "My Simple Experiment")
 }
-
-

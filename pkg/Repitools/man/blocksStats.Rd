@@ -84,7 +84,14 @@
 \author{Mark Robinson}
 \seealso{\code{\link{annotationLookup}} and \code{\link{annotationBlocksLookup}}}
 \examples{
-
-# See the examples in the manual
-
+  intensities <- matrix(c(6.8, 6.5, 6.7, 6.7, 6.9,
+                          8.8, 9.0, 9.1, 8.0, 8.9), ncol = 2)
+  colnames(intensities) <- c("Normal", "Cancer")
+  d.matrix <- matrix(c(-1, 1))
+  colnames(d.matrix) <- "Cancer-Normal"
+  probe.anno <- data.frame(chr = rep("chr1", 5),
+                           position = c(4000, 5100, 6000, 7000, 8000), 
+                           index = 1:5)
+  anno <- GRanges("chr1", IRanges(7500, 10000), '+', name = "Gene 1")
+  blocksStats(intensities, anno, 2500, 2500, probe.anno, log2.adj = FALSE, design = d.matrix)
 }

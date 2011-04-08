@@ -32,3 +32,8 @@
   a GRangesList object.
 }
 \author{Dario Strbenac}
+\examples{
+  tiny.BAM <- system.file("extdata", "ex1.bam", package = "Rsamtools")
+  if(length(tiny.BAM) > 0)
+    print(BAM2GRanges(tiny.BAM))
+}

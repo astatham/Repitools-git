@@ -7,82 +7,48 @@ setClassUnion(".SequencingData", c("character", "GenomeDataList", "GRanges",
                                   "GRangesList"))
 
 setMethod(".featureScores", c("GRanges", ".CoverageSamples"),
-    function(x, y, anno, up, down, dist, freq, s.width, verbose)
+    function(x, y, anno, up, down, dist, freq, s.width, use.strand = FALSE, verbose)
 {
     # Unpack variables in y.
     pos.labels <- y@pos.labels
     cvg.samps <- y@cvg.samps
-    max.out <- y@max.out
-    chr.ord <- y@chr.ord
-    anno.chr <- y@anno.chr
-    old.ord <- y@old.ord
+    if(use.strand == FALSE)
+        strand(cvg.samps) <- '*'
 
     # Only use sequencing data on annotated chromosomes.
     x <- x[seqnames(x) %in% seqlevels(anno)]
     seqlevels(x) <- seqlevels(anno)
 
     # Qualitatively near identical to running mean smoothing.
-    if(verbose == TRUE) message("Extending all reads to smoothing width.")
+    if(verbose) message("Extending all reads to smoothing width.")
     seqlengths(x) <- rep(NA, length(seqlengths(x)))
     x <- resize(x, s.width)
 
-    # Infer chromosome end positions from feature annotations.
-    # This means the user doesn't have to have a BSgenome object of their samples'
-    # genome installed on their computer.
-    max.anno <- seqapply(split(ranges(anno.chr), seqnames(anno.chr)),
-                         function(z) max(end(z)))
-    max.reads <- suppressWarnings(
-                 seqapply(split(ranges(x), seqnames(x)), function(z) max(end(z))))
-    max.reads <- max.reads[names(max.anno)]
-    chr.lens <- mseqapply(max, max.anno, max.reads)
-    gc()
-
-    # Remove reads on chromosomes not in annotation.
-    # Shift all reads and sampling positions right by the out-of-bounds upper bound,
-    # and then adjust chr lengths accordingly.
-    x <- shift(x, max.out)
-    seqlengths(x) <- as.numeric(chr.lens) + 2 * max.out
-    gc()
-
     # Get coverage.
-    if(verbose == TRUE) message("Calculating coverage.")
+    if(verbose) message("Calculating coverage at sample points.")
     # Scale coverages for total reads.
-    cvg <- coverage(x) / length(x)
-    samp.chr <- as(cvg.samps, "RangesList")
-    gc()
-
-    # Do sampling, per chromosome.
-    if(verbose == TRUE) message("Sampling coverage.")
-    cvg.mat <- lapply(names(samp.chr), function(z)
-	           {
-		       inds <- samp.chr[[z]]
-                       chr.mat <- cvg[[z]][inds, drop = TRUE]
-		       matrix(chr.mat, ncol = length(pos.labels), byrow = TRUE)		   	
-		    })
-    cvg.mat <- do.call(rbind, cvg.mat)
+    cvg.mat <- matrix(countOverlaps(cvg.samps, x) / length(x),
+                      ncol = length(pos.labels),
+                      byrow = TRUE)
     	
     colnames(cvg.mat) <- pos.labels
-    if("name" %in% names(elementMetadata(anno.chr))) 
-	rownames(cvg.mat) <- elementMetadata(anno.chr)[, "name"]
-    else
-	rownames(cvg.mat) <- 1:nrow(cvg.mat)
-    cvg.mat <- cvg.mat[old.ord, ]
+    rownames(cvg.mat) <- .getNames(anno)
 
     new("ScoresList", names = "Undefined", scores = list(cvg.mat), anno = anno,
          up = up, down = down, dist = dist, freq = freq, s.width = s.width)
 })
 
 setMethod(".featureScores", c("GRangesList", ".CoverageSamples"),
-    function(x, y, anno, up, down, dist, freq, s.width, verbose)
+    function(x, y, anno, up, down, dist, freq, s.width, ..., verbose)
 {
     if(length(s.width) == 1)
         s.width <- rep(s.width, length(x))
     scores <- mapply(function(z, i)
 	           {
-                        if(verbose == TRUE && !is.null(names(x)))
+                        if(verbose && !is.null(names(x)))
                             message("Processing sample ", names(x)[i])
 		   	.featureScores(z, y, anno, up, down, dist,
-                                        freq, s.width[i], verbose)
+                                        freq, s.width[i], ..., verbose = verbose)
 		   }, x, IntegerList(as.list(1:length(x))), SIMPLIFY = FALSE)
 
     if(!is.null(names(x)))
@@ -95,18 +61,18 @@ setMethod(".featureScores", c("GRangesList", ".CoverageSamples"),
 })
 
 setMethod(".featureScores", c("character", ".CoverageSamples"),
-    function(x, y, anno, up, down, dist, freq, s.width, verbose)
+    function(x, y, anno, up, down, dist, freq, s.width, ..., verbose)
 {
     if(length(s.width) == 1)
         s.width <- rep(s.width, length(x))
 
-    scores <- mapply(function(y, i)
+    scores <- mapply(function(z, i)
 	           {
-                        if(verbose == TRUE && !is.null(names(x)))
+                        if(verbose && !is.null(names(x)))
                             message("Processing sample ", names(x)[i])
-		   	readsGR <- BAM2GRanges(y)
-		   	.featureScores(readsGR, y, anno, up, down, dist, freq,
-                                        s.width[i], verbose)
+		   	
+		   	.featureScores(BAM2GRanges(z), y, anno, up, down, dist, freq,
+                                        s.width[i], ..., verbose = verbose)
 		   }, x, 1:length(x), SIMPLIFY = FALSE)
     if(!is.null(names(x)))
 	names <- x
@@ -124,7 +90,7 @@ setMethod(".featureScores", c("GenomeDataList", ".CoverageSamples"),
 })
 
 setMethod(".featureScores", c(".SequencingData", "GRanges"),
-    function(x, y, up, down, dist = c("percent", "base"), freq, s.width,
+    function(x, y, up, down, dist = c("base", "percent"), freq, s.width, ...,
              verbose = TRUE)
 {
     if(is.null(s.width))
@@ -138,28 +104,8 @@ setMethod(".featureScores", c(".SequencingData", "GRanges"),
     wd <- width(y) 
     pos <- str == '+'
 
-    if(verbose == TRUE) message("Calculating sampling positions.")	
-    if(all(str == '*'))
-        ref.points <- round((st + en) / 2)
-    else
-        ref.points <- ifelse(pos, st, en)
-
-    if(dist == "percent")
-    {
-        starts = as.numeric(ifelse(pos, ref.points - wd * up/100,
-                                        ref.points - wd * down/100))
-        ends = as.numeric(ifelse(pos, ref.points + wd * down/100,
-                                        ref.points + wd * up/100))
-    } else {
-	starts = as.numeric(ifelse(pos, ref.points - up,
-                                        ref.points - down))
-	ends = as.numeric(ifelse(pos, ref.points + down,
-                                      ref.points + up))
-    }
-
-    cov.winds <- GRanges(seqnames = seqnames(y),
-                         IRanges(start = starts, end = ends),
-                         strand = str)
+    if(verbose) message("Calculating sampling positions.")
+    cov.winds <- featureBlocks(y, up, down, dist, keep.strand = TRUE)
 
     posns <- seq(-up, down, freq)
     if(dist == "percent")
@@ -182,23 +128,9 @@ setMethod(".featureScores", c(".SequencingData", "GRanges"),
                                                    ),
                                      width = 1)
 
-    # Find upper bound of how far a sampling position could be
-    # outside of a chromosome.
-    max.out <- ifelse(dist == "percent", max(width(y)) * 
-                                         max(abs(up), abs(down)) / 100,
-                                         max(abs(up), abs(down)))
-    cvg.samps <- shift(cvg.samps, max.out)
+    samp.info <- new(".CoverageSamples", pos.labels = pos.labels, cvg.samps = cvg.samps)
 
-    # Find order to get back from RangesList order to original order.
-    chr.ord <- order(as.character(seqnames(y)))
-    anno.chr <- y[chr.ord]
-    old.ord <- order(chr.ord)
-
-    samp.info <- new(".CoverageSamples", pos.labels = pos.labels, cvg.samps = cvg.samps,
-                     max.out = max.out, chr.ord = chr.ord, anno.chr = anno.chr,
-                     old.ord = old.ord)
-
-    .featureScores(x, samp.info, y, up, down, dist, freq, s.width, verbose)
+    .featureScores(x, samp.info, y, up, down, dist, freq, s.width, ..., verbose = verbose)
 })
 
 setMethod(".featureScores", c("matrix", "GRanges"),
@@ -212,7 +144,7 @@ setMethod(".featureScores", c("matrix", "GRanges"),
     mapping <- annotationLookup(p.anno[, !ind.col], y, up, down, verbose)
     
     intens <- x[p.anno$index, ]
-    if(log2.adj == TRUE) intens <- log2(intens)
+    if(log2.adj) intens <- log2(intens)
 
     points.probes <- makeWindowLookupTable(mapping$indexes, mapping$offsets,
                      starts = seq(-up, down - freq, freq),
@@ -250,5 +182,5 @@ setMethod("featureScores", c("ANY", "GRanges"), function(x, anno,
 setMethod("featureScores", c("ANY", "data.frame"),
     function(x, anno, ...)
 {
-    featureScores(x, .annoDF2GR(anno), ...)
+    featureScores(x, annoDF2GR(anno), ...)
 })

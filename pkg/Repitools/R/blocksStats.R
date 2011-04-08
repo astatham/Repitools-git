@@ -96,7 +96,7 @@ setMethod(".blocksStats", c("matrix", "GRanges"),
                                   "adj.p.vals"), gsub(".[1-9]$", '',
                                   colnames(results)[2:5]), sep = '.')
 
-    cbind(.annoGR2DF(anno), results)
+    cbind(annoGR2DF(anno), results)
 })
 
 setMethod(".blocksStats", c("AffymetrixCelSet", "GRanges"),
@@ -139,7 +139,7 @@ setMethod(".blocksStats", c("GRangesList", "GRanges"),
                         blocks = colSums(counts),
                         ref = colSums(counts) * calcNormFactors(counts,
                               Acutoff = Acutoff))
-    annoDF <- .annoGR2DF(anno)
+    annoDF <- annoGR2DF(anno)
     results <- cbind(annoDF, counts)
     for (i in 1:ncol(design))
     {
@@ -191,5 +191,5 @@ setMethod("blocksStats", c("ANY", "GRanges"),
 setMethod("blocksStats", c("ANY", "data.frame"),
     function(x, anno, ...)
 {
-    blocksStats(x, .annoDF2GR(anno), ...)
+    blocksStats(x, annoDF2GR(anno), ...)
 })

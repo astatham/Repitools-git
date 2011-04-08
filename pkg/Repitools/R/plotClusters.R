@@ -27,7 +27,7 @@ setMethod("plotClusters", "GRanges", function(x, s.col, non.cl, ...)
 setMethod("plotClusters", "data.frame", function(x, s.col, non.cl, ...)
 {
     s.name <- colnames(x)[s.col]
-    summaryGR <- .annoDF2GR(x)
+    summaryGR <- annoDF2GR(x)
     s.col <- which(colnames(elementMetadata(summaryGR)) == s.name)
     plotClusters(summaryGR, s.col, non.cl, ...)
 })

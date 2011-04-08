@@ -24,3 +24,10 @@
 \details{The experiment type that each element of the merged list is of, is
          stored in the first element of the metadata list.}
 \author{Dario Strbenac}
+\examples{
+  grl <- GRangesList(GRanges("chr1", IRanges(5, 10)),
+                     GRanges("chr18", IRanges(25, 50)),
+                     GRanges("chr22", IRanges(1, 100)))
+  antibody <- c("MeDIP", "MeDIP", "H3K4me3")
+  mergeReplicates(grl, antibody)
+}

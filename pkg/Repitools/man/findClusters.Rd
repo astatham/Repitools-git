@@ -51,12 +51,12 @@
 \author{Dario Strbenac, Aaron Statham}
 \references{Saul Bert, in preparation}
 \examples{
-	# Not run. Time consuming.
-	#chrs <- paste("chr", c(1:22, "X", "Y"), sep = "")
-	#starts <- sample(1:10000000, 25000, replace = TRUE)
-	#ends <- starts + 10000
-	#strands <- rep('+', 25000)
-	#genes <- data.frame(chr = sample(chrs, 25000, replace = TRUE),
-        #             start = starts, end = ends, strand = '+', t = rnorm(100, 0, 2))
-	#findClusters(genes, 2, 5, 2, 3, seq(1, 10, 0.5), trend = "up", n.perm = 10)
+  chrs <- sample(paste("chr", c(1:5), sep = ""), 500, replace = TRUE)
+  starts <- sample(1:10000000, 500, replace = TRUE)
+  ends <- starts + 10000
+  genes <- data.frame(chr = chrs, start = starts, end = ends, strand = '+')
+  genes <- genes[order(genes$chr, genes$start), ]
+  genes$t.stat = rnorm(500, 0, 2)
+  genes$t.stat[21:30] = rnorm(10, 4, 1)
+  findClusters(genes, 5, 5, 2, 3, seq(1, 10, 1), trend = "up", n.perm = 2)
 }

@@ -44,5 +44,5 @@ setMethod("getCN", c("GRanges", "GRanges"),
 setMethod("getCN", c("data.frame", "data.frame"),
     function(input.windows, ip.windows, ...)
 {
-    getCN(.annoDF2GR(input.windows), .annoDF2GR(ip.windows), ...)
+    getCN(annoDF2GR(input.windows), annoDF2GR(ip.windows), ...)
 })

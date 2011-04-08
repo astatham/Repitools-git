@@ -37,12 +37,14 @@
                 direction.}
     \item{dist:}{The type of distance measure to use, in determining the boundaries
                 of the sampling area. Only provide this if \code{x} is sequencing
-                data. Default: \code{"percent"}.}
+                data. Default: \code{"base"}.}
     \item{freq:}{Score sampling frequency.}
     \item{log2.adj:}{Whether to log2 scale the array intensities. Only provide this
                     if \code{x} is array data. Default: TRUE.}
     \item{s.width:}{The width of smoothing to apply to the coverage. Only provide this
                    if \code{x} is sequencing data.}
+    \item{use.strand:}{Whether to only consider reads on the same strand as the
+                       feature. Useful for RNA-seq applications.}
     \item{verbose:}{Whether to print the progess of processing. Default: TRUE.}
   }
 }
@@ -79,14 +81,14 @@
   reference point to find scores. The semantics of them depend
   on if the annotation is stranded or not. If the annotation is stranded, then
   they give how far upstream and downstream will be sampled. If the annotation is
-  unstranded, then \code{"up"} gives how far towards the start of a chromosome to go,
-  and \code{"down"} gives how far towards the end of a chromosome to go.
+  unstranded, then \code{up} gives how far towards the start of a chromosome to go,
+  and \code{down} gives how far towards the end of a chromosome to go.
 
   If sequencing data is being analysed, and \code{dist} is \code{"percent"},
   then they give how many percent of each feature's width away from the reference
   point the sampling boundaries are. If \code{dist} is \code{"base"}, then the
   boundaries of the sampling region are a fixed width for every feature, and
-  the units of \code{"up"} and \code{"down"} are bases. \code{"up"} and \code{"down"}
+  the units of \code{up} and \code{down} are bases. \code{up} and \code{down}
   must be identical if the features are unstranded. The units of \code{freq} are
   percent for \code{dist} being \code{"percent"}, and bases for \code{dist} being
   \code{"base"}.
@@ -105,3 +107,12 @@
 \seealso{\code{\link{mergeReplicates}} for merging sequencing data replicates of an
          experiment type.}
 \author{Dario Strbenac}
+\examples{
+  data.path <- system.file("data", package = "Repitools")
+  load(file.path(data.path, "samplesList.RData"))
+  samplesList <- samplesList[1:2]
+  load(file.path(data.path, "expr.RData"))
+  anno <- read.csv(file.path(data.path, "chr21genes.csv"), stringsAsFactors = FALSE)
+
+  fs <- featureScores(samplesList, anno, up = 2000, down = 1000, freq = 500, s.width = 500)
+}

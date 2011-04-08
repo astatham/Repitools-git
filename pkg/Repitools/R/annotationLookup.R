@@ -18,7 +18,7 @@ setMethod("annotationBlocksLookup", c("data.frame", "GRanges"),
     probesGR <- GRanges(x$chr, IRanges(x$position, width = 1))
     g.names <- .getNames(anno)
 
-    if(verbose == TRUE) message("Processing mapping between probes and features.")
+    if(verbose) message("Processing mapping between probes and features.")
     mapping <- suppressWarnings(findOverlaps(anno, probesGR)@matchMatrix)
     inds <- split(p.inds[mapping[, 2]], factor(mapping[, 1],
                                 levels = 1:length(g.names)))
@@ -33,7 +33,7 @@ setMethod("annotationBlocksLookup", c("data.frame", "GRanges"),
                        v
                    }, inds, offs, SIMPLIFY = FALSE)
     names(inds) <- names(offs) <- g.names
-    if(verbose == TRUE) message("Mapping done.")
+    if(verbose) message("Mapping done.")
 
     list(indexes = inds, offsets = offs)
 })
@@ -46,13 +46,13 @@ setMethod("annotationBlocksLookup", c("data.frame", "data.frame"),
 	stop("Columns ", paste(col.missing, collapse = ", "),
              " of annotation are not present.")
 
-    annotationBlocksLookup(x, .annoDF2GR(anno), ...)
+    annotationBlocksLookup(x, annoDF2GR(anno), ...)
 })
 
 setMethod(".annotationLookup", c("data.frame", "GRanges"),
     function(x, anno, up, down, verbose = TRUE)
 {   
-    blocksGR <- .makeBlocks(anno, up, down)
+    blocksGR <- featureBlocks(anno, up, down)
     annot <- annotationBlocksLookup(x, blocksGR, verbose)
 
     pos <- as.logical(strand(anno) == '+')
@@ -79,7 +79,7 @@ setMethod("annotationLookup", c("data.frame", "data.frame"),
 	stop("Columns ", paste(col.missing, collapse = ", "),
              " of annotation are not present.")
 
-    annotationLookup(x, .annoDF2GR(anno), ...)
+    annotationLookup(x, annoDF2GR(anno), ...)
 })
 
 setMethod(".annotationBlocksCounts", c("GRanges", "GRanges"),
@@ -88,16 +88,17 @@ setMethod(".annotationBlocksCounts", c("GRanges", "GRanges"),
     f.names <- .getNames(anno)
     if(!is.null(seq.len))
     {
-        if(verbose == TRUE)
+        if(verbose)
             message("Extending all reads to fragment length.")
         x <- resize(x, seq.len)
-        if(verbose == TRUE)
+        if(verbose)
             message("Read extension complete.\nCounting started.")
     }
-    counts <- countOverlaps(anno, x)
-    names(counts) <- f.names
-    if(verbose == TRUE)
+    counts <- matrix(countOverlaps(anno, x))
+    rownames(counts) <- f.names
+    if(verbose)
     	message("Counting successful.")
+    
     counts
 })
 
@@ -141,14 +142,14 @@ setMethod("annotationBlocksCounts", c("ANY", "GRanges"),
 setMethod("annotationBlocksCounts", c("ANY", "data.frame"),
     function(x, anno, ...)
 {
-    annotationBlocksCounts(x, .annoDF2GR(anno), ...)
+    annotationBlocksCounts(x, annoDF2GR(anno), ...)
 })
 
 setMethod("annotationCounts", c("ANY", "GRanges"),
     function(x, anno, up, down, ...)
 {
     invisible(.validate(anno, up, down))
-    blocksGR <- .makeBlocks(anno, up, down)
+    blocksGR <- featureBlocks(anno, up, down)
 
     .annotationBlocksCounts(x, blocksGR, ...)
 })
@@ -156,5 +157,5 @@ setMethod("annotationCounts", c("ANY", "GRanges"),
 setMethod("annotationCounts", c("ANY", "data.frame"),
     function(x, anno, ...)
 {
-    annotationCounts(x, .annoDF2GR(anno), ...)
+    annotationCounts(x, annoDF2GR(anno), ...)
 })

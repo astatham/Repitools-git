@@ -80,5 +80,5 @@ setMethod("checkProbes", c("GRanges", "GRanges"),
 setMethod("checkProbes", c("data.frame", "data.frame"),
 	function(regs, probes, up = NULL, down = NULL, ...)
 {
-	checkProbes(.annoDF2GR(regs), .annoDF2GR(probes), up = up, down = down, ...)
+	checkProbes(annoDF2GR(regs), annoDF2GR(probes), up = up, down = down, ...)
 })
