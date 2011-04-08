@@ -1,0 +1,360 @@
+
+R version 2.13.0 RC (2011-04-05 r55310)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "Repitools"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> library('Repitools')
+Loading required package: R.methodsS3
+R.methodsS3 v1.2.1 (2010-09-18) successfully loaded. See ?R.methodsS3 for help.
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following object(s) are masked from 'package:base':
+
+    Map, cbind, eval, intersect, mapply, order, paste, pmax, pmax.int,
+    pmin, pmin.int, rbind, rep.int, setdiff, table, union
+
+Loading required package: GenomicRanges
+Loading required package: BSgenome
+Loading required package: Biostrings
+> 
+> assign(".oldSearch", search(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("BAM2GRanges")
+> ### * BAM2GRanges
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: BAM2GenomicRanges
+> ### Title: Read in a (list of) BAM file(s) into a GRanges(List) object.
+> ### Aliases: BAM2GRanges BAM2GRangesList BAM2GRanges,character-method
+> ###   BAM2GRangesList,character-method
+> 
+> ### ** Examples
+> 
+>   tiny.BAM <- system.file("extdata", "ex1.bam", package = "Rsamtools")
+>   if(length(tiny.BAM) > 0)
++     print(BAM2GRanges(tiny.BAM))
+Loading required package: Rsamtools
+Reading BAM file ex1.bam.
+Creating GRanges from BAM datalist.
+GRanges with 3271 ranges and 0 elementMetadata values
+       seqnames       ranges strand   |
+          <Rle>    <IRanges>  <Rle>   |
+   [1]     seq1     [ 1, 36]      +   |
+   [2]     seq1     [ 3, 37]      +   |
+   [3]     seq1     [ 5, 39]      +   |
+   [4]     seq1     [ 6, 41]      +   |
+   [5]     seq1     [ 9, 43]      +   |
+   [6]     seq1     [13, 47]      +   |
+   [7]     seq1     [13, 48]      +   |
+   [8]     seq1     [15, 49]      +   |
+   [9]     seq1     [18, 52]      -   |
+   ...      ...          ...    ... ...
+[3263]     seq2 [1520, 1554]      +   |
+[3264]     seq2 [1523, 1555]      -   |
+[3265]     seq2 [1524, 1558]      -   |
+[3266]     seq2 [1524, 1557]      +   |
+[3267]     seq2 [1524, 1558]      +   |
+[3268]     seq2 [1524, 1558]      +   |
+[3269]     seq2 [1528, 1562]      -   |
+[3270]     seq2 [1532, 1566]      -   |
+[3271]     seq2 [1533, 1567]      -   |
+
+seqlengths
+ seq1 seq2
+   NA   NA
+> 
+> 
+> 
+> cleanEx()
+
+detaching ‘package:Rsamtools’
+
+> nameEx("GDL2GRL")
+> ### * GDL2GRL
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: GDL2GRL
+> ### Title: Utility function to covert a GenomeDataList object into
+> ###   GRangesList objects.
+> ### Aliases: GDL2GRL GDL2GRL,GenomeDataList-method
+> 
+> ### ** Examples
+> 
+>     require(BSgenome)
+>     gdl <- GenomeDataList(list(
++                          GenomeData(list(
++                                          chr1 = list(`-` = c(100, 200), `+` = c(800, 1000)),
++                                          chr2 = list(`-` = c(450, 550), `+` = c(1500, 7500))
++                                          )
++                                     ),
++                          GenomeData(list(
++                                          chr1 = list(`-` = c(300, 700), `+` = c(850, 900)),
++                                          chr2 = list(`-` = c(125, 250), `+` = c(500, 750))
++                                          )
++                                     )
++                                 )
++                             )
+>     GDL2GRL(gdl)
+GRangesList of length 2
+[[1]] 
+GRanges with 8 ranges and 0 elementMetadata values
+    seqnames       ranges strand |
+       <Rle>    <IRanges>  <Rle> |
+[1]     chr1 [ 100,  100]      - |
+[2]     chr1 [ 200,  200]      - |
+[3]     chr1 [ 800,  800]      + |
+[4]     chr1 [1000, 1000]      + |
+[5]     chr2 [ 450,  450]      - |
+[6]     chr2 [ 550,  550]      - |
+[7]     chr2 [1500, 1500]      + |
+[8]     chr2 [7500, 7500]      + |
+
+[[2]] 
+GRanges with 8 ranges and 0 elementMetadata values
+    seqnames     ranges strand |
+       <Rle>  <IRanges>  <Rle> |
+[1]     chr1 [300, 300]      - |
+[2]     chr1 [700, 700]      - |
+[3]     chr1 [850, 850]      + |
+[4]     chr1 [900, 900]      + |
+[5]     chr2 [125, 125]      - |
+[6]     chr2 [250, 250]      - |
+[7]     chr2 [500, 500]      + |
+[8]     chr2 [750, 750]      + |
+
+
+seqlengths
+ chr1 chr2
+   NA   NA
+> 
+> 
+> 
+> cleanEx()
+> nameEx("annoDF2GR")
+> ### * annoDF2GR
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: annoDF2GR
+> ### Title: Convert a 'data.frame' to a 'GRanges'.
+> ### Aliases: annoDF2GR annoDF2GR,data.frame-method
+> 
+> ### ** Examples
+> 
+>   df <- data.frame(chr = c("chr1", "chr3", "chr7", "chr22"),
++                    start = seq(1000, 4000, 1000),
++                    end = seq(1500, 4500, 1000),
++                    t = c(3.11, 0.93, 2.28, -0.18),
++                    gc = c("High", "High", "Low", "High"))
+> 
+>   annoDF2GR(df)
+GRanges with 4 ranges and 2 elementMetadata values
+    seqnames       ranges strand |         t       gc
+       <Rle>    <IRanges>  <Rle> | <numeric> <factor>
+[1]     chr1 [1000, 1500]      * |      3.11     High
+[2]     chr3 [2000, 2500]      * |      0.93     High
+[3]     chr7 [3000, 3500]      * |      2.28      Low
+[4]    chr22 [4000, 4500]      * |     -0.18     High
+
+seqlengths
+  chr1 chr22  chr3  chr7
+    NA    NA    NA    NA
+> 
+> 
+> 
+> cleanEx()
+> nameEx("annoGR2DF")
+> ### * annoGR2DF
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: annoGR2DF
+> ### Title: Convert an annotated 'GRanges' to a 'data.frame'.
+> ### Aliases: annoGR2DF annoGR2DF,GRanges-method
+> 
+> ### ** Examples
+> 
+>   chrs <- c("chr1", "chr3", "chr7", "chr22")
+>   starts <- seq(1000, 4000, 1000)
+>   ends <- seq(1500, 4500, 1000)
+>   t <- c(3.11, 0.93, 2.28, -0.18)
+>   gc <- c("High", "High", "Low", "High")
+>   gr <- GRanges(chrs, IRanges(starts, ends), strand = '*', t, gc)
+> 
+>   annoGR2DF(gr)
+    chr start  end width     t   gc
+1  chr1  1000 1500   501  3.11 High
+2  chr3  2000 2500   501  0.93 High
+3  chr7  3000 3500   501  2.28  Low
+4 chr22  4000 4500   501 -0.18 High
+> 
+> 
+> 
+> cleanEx()
+> nameEx("annotationBlocksCounts")
+> ### * annotationBlocksCounts
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: annotationBlocksCounts
+> ### Title: Counts the number of sequencing reads within supplied genomic
+> ###   blocks.
+> ### Aliases: annotationBlocksCounts
+> ###   annotationBlocksCounts,ANY,data.frame-method
+> ###   annotationBlocksCounts,ANY,GRanges-method
+> 
+> ### ** Examples
+> #See the manual
+> 
+> 
+> cleanEx()
+> nameEx("annotationBlocksLookup")
+> ### * annotationBlocksLookup
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: annotationBlocksLookup
+> ### Title: Forms a mapping between probe locations and chromosomal blocks
+> ###   (regions).
+> ### Aliases: annotationBlocksLookup
+> ###   annotationBlocksLookup,data.frame,data.frame-method
+> ###   annotationBlocksLookup,data.frame,GRanges-method
+> 
+> ### ** Examples
+> 
+> # create example set of probes and gene start sites
+> probeTab <- data.frame(position=seq(1000,3000,by=200), chr="chrX", strand="+")
+> genes <- data.frame(chr="chrX", start=c(2100,2200), end=c(2500, 2400), strand=c("+","-"))
+> rownames(genes) <- paste("gene",1:2,sep="")
+> 
+> # Call annotationLookup() and look at output
+> annotationBlocksLookup(probeTab, genes)
+Processing mapping between probes and features.
+Mapping done.
+$indexes
+$indexes$`1`
+[1] 7 8
+
+$indexes$`2`
+[1] 7 8
+
+
+$offsets
+$offsets$`1`
+  7   8 
+100 300 
+
+$offsets$`2`
+  7   8 
+  0 200 
+
+
+> 
+> 
+> 
+> cleanEx()
+> nameEx("annotationCounts")
+> ### * annotationCounts
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: annotationCounts
+> ### Title: Counts the number of sequencing reads surrounding supplied
+> ###   annotations
+> ### Aliases: annotationCounts annotationCounts,ANY,data.frame-method
+> ###   annotationCounts,ANY,GRanges-method
+> 
+> ### ** Examples
+> 
+>     #See the manual
+> 
+> 
+> 
+> cleanEx()
+> nameEx("annotationLookup")
+> ### * annotationLookup
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: annotationLookup
+> ### Title: Forms a mapping between probes on a tiling array and windows
+> ###   surrounding the TSSs of genes.
+> ### Aliases: annotationLookup annotationLookup,data.frame,data.frame-method
+> ###   annotationLookup,data.frame,GRanges-method
+> 
+> ### ** Examples
+> 
+> 
+> # create example set of probes and gene start sites
+> probes <- data.frame(position=seq(1000, 3000, by = 200), chr = "chrX", strand = '-')
+> genes <- data.frame(chr = "chrX", start=c(2100, 1000), end = c(3000, 2200),
++                     strand=c("+","-"))
+> rownames(genes) <- paste("gene", 1:2, sep = '')
+> 
+> # Call annotationLookup() and look at output
+> annotationLookup(probes, genes, 500, 500)
+Processing mapping between probes and features.
+Mapping done.
+$indexes
+$indexes$`1`
+[1] 4 5 6 7 8 9
+
+$indexes$`2`
+[1] 9 8 7 6 5
+
+
+$offsets
+$offsets$`1`
+   4    5    6    7    8    9 
+-500 -300 -100  100  300  500 
+
+$offsets$`2`
+   9    8    7    6    5 
+-400 -200    0  200  400 
+
+
+> 
+> 
+> 
+> cleanEx()
+> nameEx("binPlots")
+> ### * binPlots
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: binPlots
+> ### Title: Create line plots of averaged signal across a promoter
+> ### Aliases: binPlots binPlots,GenomeDataList-method
+> ###   binPlots,GRangesList-method binPlots,AffymetrixCelSet-method
+> ###   binPlots,matrix-method
+> 
+> ### ** Examples
+> 
+>   annoFile <- system.file("data","chr21genes.csv", package="Repitools")
+>   annoDF <- read.csv(annoFile)
+> 
+>   readsFile <- system.file("data","samplesList.RData", package="Repitools")
+
+Execution halted

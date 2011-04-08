@@ -1,0 +1,71 @@
+BAM2GRanges             Read in a (list of) BAM file(s) into a
+                        GRanges(List) object.
+ChromaBlocks            A function to find areas of enrichment in
+                        sequencing data
+ChromaResults-class     ChromaResults class
+ClusteredCoverageList   Container for coverage matrices with clustering
+                        results.
+FastQC-class            FastQC and associated classes
+GDL2GRL                 Utility function to covert a GenomeDataList
+                        object into GRangesList objects.
+ScoresList              Container for 'featureScores()' output.
+annoDF2GR               Convert a 'data.frame' to a 'GRanges'.
+annoGR2DF               Convert an annotated 'GRanges' to a
+                        'data.frame'.
+annotationBlocksCounts
+                        Counts the number of sequencing reads within
+                        supplied genomic blocks.
+annotationBlocksLookup
+                        Forms a mapping between probe locations and
+                        chromosomal blocks (regions).
+annotationCounts        Counts the number of sequencing reads
+                        surrounding supplied annotations
+annotationLookup        Forms a mapping between probes on a tiling
+                        array and windows surrounding the TSSs of
+                        genes.
+binPlots                Create line plots of averaged signal across a
+                        promoter
+blocksStats             Calculate statistics for regions in the genome
+checkProbes             Check Probe Specificity for Some Regions
+chr21genes              Positions of Genes on Human Chromosome 21
+clusterPlots            Visualisation of tables of feature coverages.
+cpgBoxplots             Boxplots of intensity, binned by Cpg Density
+cpgDensityCalc          Calculate CpG Density in a Window
+cpgDensityPlot          Plot the distribution of sequencing reads CpG
+                        densities.
+doSeqStats              Calculate Statistics for Sequencing Data
+enrichmentCalc          Calculate sequencing enrichment
+enrichmentPlot          Plot the distribution of sequencing enrichment.
+expr                    Vector of expression differences
+featureBlocks           Make windows for distances around a reference
+                        point.
+featureScores           Get scores at regular sample points around
+                        genomic features.
+findClusters            Find Clusters Epigenetically Modified Genes
+gcContentCalc           Calculate The gcContent of a Region
+genQC                   Plot Quality Checking Information for
+                        Sequencing Data
+genomeBlocks            Creates bins across a genome.
+getCN                   Calculate Copy Number and Map To Enriched
+                        Regions
+getProbePositionsDf     Translate Affymetrix probe information in a
+                        table.
+loadPairFile            A routine to read Nimblegen tiling array
+                        intensities
+loadSampleDirectory     A routine to read Nimblegen tiling array
+                        intensities
+makeWindowLookupTable   Using the output of 'annotationLookup', create
+                        a tabular storage of the indices
+mappabilityCalc         Calculate The Mappability of a Region
+mergeReplicates         Merge GRanges that are of replicate
+                        experiments.
+multiHeatmap            Superfigure plots
+plotClusters            Plot Scores of Cluster Regions
+processNDF              Reads in a Nimblegen microarray design file
+                        (NDF)
+regionStats             Find Regions of significance in microarray data
+samplesList             Short Reads from Cancer and Normal
+sequenceCalc            Find occurences of a DNA pattern
+significancePlots       Create line plots of averaged signal across a
+                        promoter compared to random sampling
+writeWig                Writes sequencing data out into a wiggle files
