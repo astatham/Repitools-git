@@ -2,12 +2,8 @@ setGeneric("annotationBlocksLookup", function(x, anno, ...)
            {standardGeneric("annotationBlocksLookup")})
 setGeneric("annotationLookup", function(x, anno, ...)
            {standardGeneric("annotationLookup")})
-setGeneric(".annotationLookup", function(x, anno, ...)
-           {standardGeneric(".annotationLookup")})
 setGeneric("annotationBlocksCounts", function(x, anno, ...)
            {standardGeneric("annotationBlocksCounts")})
-setGeneric(".annotationBlocksCounts", function(x, anno, ...)
-           {standardGeneric(".annotationBlocksCounts")})
 setGeneric("annotationCounts", function(x, anno, ...)
            {standardGeneric("annotationCounts")})
 
@@ -49,11 +45,13 @@ setMethod("annotationBlocksLookup", c("data.frame", "data.frame"),
     annotationBlocksLookup(x, annoDF2GR(anno), ...)
 })
 
-setMethod(".annotationLookup", c("data.frame", "GRanges"),
-    function(x, anno, up, down, verbose = TRUE)
-{   
+setMethod("annotationLookup", c("data.frame", "GRanges"),
+    function(x, anno, up, down, ...)
+{
+    invisible(.validate(anno, up, down))
+
     blocksGR <- featureBlocks(anno, up, down)
-    annot <- annotationBlocksLookup(x, blocksGR, verbose)
+    annot <- annotationBlocksLookup(x, blocksGR, ...)
 
     pos <- as.logical(strand(anno) == '+')
     annot$offsets[pos] <- lapply(annot$offsets[pos], function(z) z - up)
@@ -62,13 +60,6 @@ setMethod(".annotationLookup", c("data.frame", "GRanges"),
     names(annot$offsets) <- names(annot$indexes) <- .getNames(anno)
 
     annot
-})
-
-setMethod("annotationLookup", c("data.frame", "GRanges"),
-    function(x, anno, up, down, ...)
-{
-    invisible(.validate(anno, up, down))
-    .annotationLookup(x, anno, up, down, ...)
 })
 
 setMethod("annotationLookup", c("data.frame", "data.frame"),
@@ -82,7 +73,7 @@ setMethod("annotationLookup", c("data.frame", "data.frame"),
     annotationLookup(x, annoDF2GR(anno), ...)
 })
 
-setMethod(".annotationBlocksCounts", c("GRanges", "GRanges"),
+setMethod("annotationBlocksCounts", c("GRanges", "GRanges"),
     function(x, anno, seq.len = NULL, verbose = TRUE)
 {
     f.names <- .getNames(anno)
@@ -102,12 +93,12 @@ setMethod(".annotationBlocksCounts", c("GRanges", "GRanges"),
     counts
 })
 
-setMethod(".annotationBlocksCounts", c("GRangesList", "GRanges"),
+setMethod("annotationBlocksCounts", c("GRangesList", "GRanges"),
     function(x, anno, ...)
 {
     f.names <- .getNames(anno)
     counts <- IRanges::lapply(x, function(z)
-                  .annotationBlocksCounts(z, anno, ...))
+                  annotationBlocksCounts(z, anno, ...))
     counts <- do.call(cbind, counts)
     if(!is.null(names(x))) colnames(counts) <- names(x)
     rownames(counts) <- f.names
@@ -115,28 +106,16 @@ setMethod(".annotationBlocksCounts", c("GRangesList", "GRanges"),
     counts
 })
 
-setMethod(".annotationBlocksCounts", c("character", "GRanges"),
+setMethod("annotationBlocksCounts", c("character", "GRanges"),
     function(x, anno, ...)
 {
     f.names <- .getNames(anno)
-    counts <- lapply(x, function(z) .annotationBlocksCounts(BAM2GRanges(z), anno, ...))
+    counts <- lapply(x, function(z) annotationBlocksCounts(BAM2GRanges(z), anno, ...))
     counts <- do.call(cbind, counts)
     if(!is.null(names(x))) colnames(counts) <- names(x)
     rownames(counts) <- f.names
 
     counts
-})
-
-setMethod(".annotationBlocksCounts", c("GenomeDataList", "GRanges"),
-    function(x, anno, ...)
-{
-    .annotationBlocksCounts(GDL2GRL(x), anno, ...)
-})
-
-setMethod("annotationBlocksCounts", c("ANY", "GRanges"),
-    function(x, anno, ...)
-{
-    .annotationBlocksCounts(x, anno, ...)
 })
 
 setMethod("annotationBlocksCounts", c("ANY", "data.frame"),
@@ -151,7 +130,7 @@ setMethod("annotationCounts", c("ANY", "GRanges"),
     invisible(.validate(anno, up, down))
     blocksGR <- featureBlocks(anno, up, down)
 
-    .annotationBlocksCounts(x, blocksGR, ...)
+    annotationBlocksCounts(x, blocksGR, ...)
 })
 
 setMethod("annotationCounts", c("ANY", "data.frame"),

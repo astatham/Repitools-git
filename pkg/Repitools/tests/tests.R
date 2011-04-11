@@ -94,6 +94,7 @@ if(pathToData != "") # Do tests involving CDFs, CELs, sequences.
 	stop("blocksStats giving unexpected results for acetylation arrays.")
 	
     load(paste("rawData", "sequencing", "seq_data.Rdata", sep = .Platform$file.sep))
+    rs <- GDL2GRL(rs)
     results <- annotationCounts(rs, anno, 1000, 1000, seq.len = 300)
     if(!all(results[100,]==c(8,6,1,4)) || !all(results[5000,]==c(0,0,50,52)))
         stop("annotationCounts giving unexpected results.")

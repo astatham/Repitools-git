@@ -9,7 +9,10 @@
 }
 \section{Usage}{
   \describe{
+    # ANY,data.frame method
     \code{annotationCounts(x, anno, ...)}
+    # ANY,GRanges method
+    \code{annotationCounts(x, anno, up, down, ...)}
   }
 }
 \section{Arguments}{
@@ -25,7 +28,7 @@
                    used. Default: NULL (no extension).}
     \item{verbose:}{Whether to print progress. Default: TRUE.}
     \item{...:}{Parameters described above, that are not used in the function called,
-               but are passed further into a private function that uses them in its
+               but are passed into \link{annotationBlocksCounts}, that uses them in its
                processing.}
   }
 }
@@ -41,5 +44,10 @@
 \author{Aaron Statham}
 \seealso{\code{\link{annotationBlocksCounts}}, \code{\link{genomeBlocks}}}
 \examples{
-    #See the manual
+  reads <- GRanges(seqnames = rep("chr1", 5),
+                   IRanges(c(3309, 4756, 4801, 4804, 5392), width = 36),
+                   strand = c('+', '-', '-', '+', '+'))
+  genes <- GRanges("chr1", IRanges(5000, 7000), strand = '+')
+
+  annotationCounts(reads, genes, 500, 500, 300)
 }

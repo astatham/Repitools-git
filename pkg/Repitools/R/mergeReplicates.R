@@ -18,14 +18,3 @@ setMethod("mergeReplicates", "GRangesList", function(reads, types, verbose = TRU
 	if(verbose == TRUE) cat("Pooled GRangesList created.\n")
 	reads
 })
-
-setMethod("mergeReplicates", "GenomeDataList", function(reads, types, verbose = TRUE)
-{
-	if(is.null(types) == TRUE)
-		stop("Mandatory argument 'types' not provided.\n")
-	if(length(types) != length(reads))
-		stop("'types' and 'reads' lengths differ.\n")
-
-	reads <- GDL2GRL(reads)
-	mergeReplicates(reads, types, verbose)
-})

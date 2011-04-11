@@ -29,8 +29,8 @@
     \item{down:}{The number of bases downstream to look.}
     \item{verbose:}{Whether to print progress to screen. Default: TRUE}
     \item{...:}{Parameters described above, that are not used in the function called,
-               but are passed further into a private function that uses them in its
-               processing.}
+               but are passed further into \link{annotationBlocksLookup}, which uses
+               them in its processing.}
   }
 }
 \details{

@@ -83,12 +83,6 @@ setMethod(".featureScores", c("character", ".CoverageSamples"),
                             s.width = s.width)
 })
 
-setMethod(".featureScores", c("GenomeDataList", ".CoverageSamples"),
-    function(x, y, ...)
-{
-    .featureScores(GDL2GRL(x), y, ...)
-})
-
 setMethod(".featureScores", c(".SequencingData", "GRanges"),
     function(x, y, up, down, dist = c("base", "percent"), freq, s.width, ...,
              verbose = TRUE)

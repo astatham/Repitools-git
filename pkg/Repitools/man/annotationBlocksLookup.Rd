@@ -8,24 +8,20 @@
   of interest, this procedure forms a list structure that contains the indices
   to map from one to the other.
 }
-\section{Usage}{
-  \describe{
-    \code{annotationBlocksLookup(x, anno, ...)}
-  }
+\usage{
+  \S4method{annotationBlocksLookup}{data.frame,data.frame}(x, anno, ...)
+  \S4method{annotationBlocksLookup}{data.frame,GRanges}(x, anno, verbose = TRUE)
 }
-\section{Arguments}{
-  \describe{
-    \item{x:}{probe genomic locations, a \code{data.frame} with required elements
+\arguments{
+  \item{x}{probe genomic locations, a \code{data.frame} with required elements
            \code{chr}, \code{position}, and optionally \code{index}}
-    \item{anno:}{a \code{data.frame} with required elements \code{chr}, \code{start},
-           \code{end}, \code{strand} and optional element \code{name}.
-           Also may be a \code{GRanges} with optional elementMetadata column
-           \code{name}.}
-    \item{verbose:}{Whether to print progress to screen. Default: TRUE}
-    \item{...:}{Parameters described above, that are not used in the top-level
-               error-checking stage, but are passed further into a private
-               function that uses them in its processing.}
-  }
+  \item{anno}{a \code{data.frame} with required elements \code{chr}, \code{start},
+              \code{end}, \code{strand} and optional element \code{name}.
+              Also may be a \code{GRanges} with optional elementMetadata column
+              \code{name}.}
+  \item{verbose}{Whether to print progress to screen.}
+  \item{...}{Represents the \code{verbose} parameter, when the \code{data.frame,data.frame}
+             method is called.}
 }
 \details{
   Strandedness of probes is ignored, even if it is given.

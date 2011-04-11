@@ -168,12 +168,6 @@ setMethod(".blocksStats", c("GRangesList", "GRanges"),
     results
 })
 
-setMethod(".blocksStats", c("GenomeDataList", "GRanges"),
-    function(x, anno, ...)
-{
-    .blocksStats(GDL2GRL(x), anno, ...)
-})
-
 setMethod(".blocksStats", c("character", "GRanges"),
     function(x, anno, ...)
 {
