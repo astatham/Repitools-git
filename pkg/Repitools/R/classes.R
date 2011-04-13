@@ -18,21 +18,21 @@ setMethod("show", "ScoresList",
     function(object)
     {
         if(!is.null(object@dist))
-	    distLabel <- ifelse(object@dist == "percent", '%', "bases")
+	    dist.label <- ifelse(object@dist == "percent", '%', "bases")
         else
-            distLabel <- "bases"
+            dist.label <- "bases"
 	cat("An object of class 'ScoresList'.\n")
 	cat("Tables: ", paste(object@names, collapse = ", "), ".\n", sep = '')
 	cat("Features:\n")
 	print(object@anno)
-	cat("Region:",  paste(object@up, distLabel, "up to", object@down,
-                         distLabel, "down.\n"))
+	cat("Region:",  paste(object@up, dist.label, "up to", object@down,
+                         dist.label, "down.\n"))
         if(!is.null(object@s.width))
         {
 	    cat("Smoothing:", paste(object@s.width, collapse = ", "), "bases.\n")
-	    cat("Sampling : ", object@freq, ' ', distLabel, ".\n\n",  sep = '')
+	    cat("Sampling : ", object@freq, ' ', dist.label, ".\n\n",  sep = '')
         } else {
-            cat("Window Width : ", object@freq, ' ', distLabel, ".\n\n",  sep = '')
+            cat("Window Width : ", object@freq, ' ', dist.label, ".\n\n",  sep = '')
         }        
     })
 
@@ -57,28 +57,27 @@ setReplaceMethod("names", "ScoresList",
 
 setClass("ClusteredCoverageList", representation(
                                     cluster.id = "numeric",
-				    expr = "numeric",
+				    expr = "ANY",
+                                    expr.name = "ANY",
 				    sort.data = "ANY",
 				    sort.name = "ANY"),
-                                 prototype(
-				    sort.data = NULL,
-				    sort.name = NULL),
                        contains = "ScoresList")
 
 setMethod("show", "ClusteredCoverageList",
     function(object)
     {
-	distLabel <- ifelse(object@dist == "percent", '%', "bases")
+	dist.label <- ifelse(object@dist == "percent", '%', "bases")
 	cat("An object of class 'ClusteredCoverageList'.\n")
 	cat("Tables: ", paste(object@names, collapse = ", "), ".\n", sep = '')
-	cat("Region: ",  paste(object@up, distLabel, "up to", object@down,
-	    distLabel, "down.\n"))
+	cat("Region: ",  paste(object@up, dist.label, "up to", object@down,
+	    dist.label, "down.\n"))
 	cat("Features:\n")
 	print(object@anno)
 	cat("Smoothing:", paste(object@s.width, collapse = ", "), "bases.\n")
-	cat("Sampling: ", object@freq, ' ', distLabel, ".\n",  sep = '')
-	cat("Feature Expressions:", paste(paste(head(object@expr),
-	    collapse = ", "), ", ...\n", sep = ''))
+	cat("Sampling: ", object@freq, ' ', dist.label, ".\n",  sep = '')
+        if(!is.null(object@expr))
+            cat("Feature Expressions:", object@expr.name, paste('\n', paste(head(object@expr),
+	        collapse = ", "), ", ...\n", sep = ''))
 	cat("Feature Clusters:", paste(paste(head(object@cluster.id),
 	    collapse = ", "), ", ...\n", sep = ''))
 	if(!is.null(object@sort.data))
@@ -91,13 +90,14 @@ setMethod("show", "ClusteredCoverageList",
 setGeneric("ClusteredCoverageList", function(x, ...)
            {standardGeneric("ClusteredCoverageList")})
 setMethod("ClusteredCoverageList", "ScoresList",
-    function(x, scores = tables(x), expr, cluster.id, sort.data = NULL,
+    function(x, scores = tables(x), expr = NULL, expr.name = NULL, cluster.id, sort.data = NULL,
              sort.name = NULL)
 {
 	new("ClusteredCoverageList", names = x@names, scores = scores, anno = x@anno,
 	    up = x@up, down = x@down, dist = x@dist,
 	    freq = x@freq, s.width = x@s.width, cluster.id = cluster.id,
-	    expr = expr, sort.name = sort.name, sort.data = sort.data)
+	    expr = expr, expr.name = expr.name, sort.data = sort.data,
+            sort.name = sort.name)
 })
 
 setMethod("[", "ClusteredCoverageList",
@@ -106,7 +106,8 @@ setMethod("[", "ClusteredCoverageList",
 	new("ClusteredCoverageList", names = x@names[i], scores = x@scores[i],
 	    anno = x@anno, up = x@up, down = x@down, dist = x@dist,
 	    freq = x@freq, s.width = x@s.width[i], cluster.id = x@cluster.id,
-	    expr = x@expr, sort.data = x@sort.data, sort.name = x@sort.name)
+	    expr = x@expr, expr.name = x@expr.name, sort.data = x@sort.data,
+            sort.name = x@sort.name)
     })
 
 # A collection of variables that describe where the sampling will happen.
@@ -116,11 +117,7 @@ setMethod("[", "ClusteredCoverageList",
 setClass(".CoverageSamples",
          representation(
                         pos.labels = "ANY", # character or numeric.
-                        cvg.samps = "GRanges",
-                        max.out = "numeric",
-                        chr.ord = "numeric",
-                        anno.chr = "GRanges",
-                        old.ord = "numeric"
+                        cvg.samps = "GRanges"
 			))
 
 # container for output of regionStats()    

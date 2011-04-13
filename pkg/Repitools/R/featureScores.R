@@ -22,7 +22,8 @@ setMethod(".featureScores", c("GRanges", ".CoverageSamples"),
     # Qualitatively near identical to running mean smoothing.
     if(verbose) message("Extending all reads to smoothing width.")
     seqlengths(x) <- rep(NA, length(seqlengths(x)))
-    x <- resize(x, s.width)
+    if(!is.null(s.width))
+        x <- resize(x, s.width)
 
     # Get coverage.
     if(verbose) message("Calculating coverage at sample points.")
@@ -87,8 +88,6 @@ setMethod(".featureScores", c(".SequencingData", "GRanges"),
     function(x, y, up, down, dist = c("base", "percent"), freq, s.width, ...,
              verbose = TRUE)
 {
-    if(is.null(s.width))
-        stop("Mandatory argument 's.width' not provided.")
 
     dist <- match.arg(dist)
 

@@ -20,14 +20,15 @@
 \section{Constructor}{
   \describe{
     \item{}{
-    	\code{ClusteredCoverageList(x, cvgs = tables(x), expr, cluster.id,
-                                    sort.name = NULL, sort.data = NULL)}
+    	\code{ClusteredCoverageList(x, cvgs = tables(x), expr = NULL, expr.name = NULL,
+                                    cluster.id, sort.name = NULL, sort.data = NULL)}
 	Creates a ClusteredCoverageList object.
 	\describe{
 	    \item{\code{x}}{A \code{\linkS4class{ScoresList}} object.}
 	    \item{\code{scores}}{A list of coverage matrices.}
 	    \item{\code{expr}}{A numeric vector, same length as number of
                                rows of every coverage matrix.}
+	    \item{\code{expr.name}}{A label, describing the expression data.}
 	    \item{\code{cluster.id}}{A vector, same length as number of
                                      rows of every coverage matrix.}
 	    \item{\code{sort.data}}{Vector of data to order features

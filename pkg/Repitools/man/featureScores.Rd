@@ -42,7 +42,8 @@
     \item{log2.adj:}{Whether to log2 scale the array intensities. Only provide this
                     if \code{x} is array data. Default: TRUE.}
     \item{s.width:}{The width of smoothing to apply to the coverage. Only provide this
-                   if \code{x} is sequencing data.}
+                   if \code{x} is sequencing data. This argument is optional. If
+                   not provided, then no smoothing is done.}
     \item{use.strand:}{Whether to only consider reads on the same strand as the
                        feature. Useful for RNA-seq applications.}
     \item{verbose:}{Whether to print the progess of processing. Default: TRUE.}

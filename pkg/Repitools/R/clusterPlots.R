@@ -2,7 +2,7 @@ setGeneric("clusterPlots", function(c.list, ...){standardGeneric("clusterPlots")
 
 setMethod("clusterPlots", "ClusteredCoverageList",
 	function(c.list, plot.ord = 1:length(c.list), plot.type = c("line", "heatmap"),
-                 cols = NULL, t.name = "Clustered Enrichment")
+                 cols = NULL, t.name = "Clustered Enrichment", ...)
 {
     plot.type <- match.arg(plot.type)
     n.marks <- length(c.list)
@@ -22,15 +22,22 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 
     # Get median expression for each cluster. Find ascending order.
     expr <- c.list@expr
+    expr.name <- c.list@expr.name
     cl.id <- c.list@cluster.id
     n.clusters <- length(unique(cl.id))
-    cl.expr <- tapply(expr, factor(cl.id), median, na.rm = TRUE)
-    cl.ord <- order(cl.expr)
+    if(!is.null(expr))
+    {
+        cl.expr <- tapply(expr, factor(cl.id), median, na.rm = TRUE)
+        cl.ord <- order(cl.expr)
+    } else {
+        cl.expr <- numeric()
+        cl.ord <- 1:n.clusters
+    }
 
     # Get x-axis pos and labels.
-    posLabels <- colnames(cvgs[[1]])
-    pos <- as.integer(gsub('%', '', posLabels)) # Get raw position if labels have
-                                                # percentage signs.
+    pos.labels <- colnames(cvgs[[1]])
+    pos <- as.integer(gsub('%', '', pos.labels)) # Get raw position if labels have
+                                                 # percentage signs.
 
     if(plot.type == "line")
     {
@@ -50,10 +57,10 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 			
 	    y.max = max(unlist(x)) * 1.1
 	    matplot(pos, x, type = 'l', lty = 1, col = cols, ylim = c(0, y.max),
-                    xlab = "Position", ylab = "Smoothed Coverage", yaxt = 'n',
+                    xlab = "Relative Position", ylab = "Smoothed Coverage", yaxt = 'n',
                     xaxs = "i", yaxs = "i",
-                    main = paste("Within Cluster Coverage (Median Expression : ",
-                    round(y, 2), ")", sep = ''))
+                    main = paste("Within Cluster Coverage", if(!is.na(y)) paste("(Median Expression :",
+                    round(y, 2)), ")", sep = ''))
 	    axis(2, at = c(0, y.max / 2, y.max), labels = c("None", "Medium", "High"))
 
 	    plot.new()
@@ -63,6 +70,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 
     } else { # Plot a heatmap
 	
+        par(oma = c(1, 1, 2, 1))
 	sort.data <- c.list@sort.data
 	sort.name <- c.list@sort.name
 	# Get order of all features next.
@@ -73,14 +81,15 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	
 	# Re-arrange the ChIP and expression data and vector of sort data.
 	cvgs <- lapply(cvgs, function(x) x[ord, ])
-	expr <- expr[ord]
+	if(!is.null(expr)) expr <- expr[ord]
 	if(length(sort.data) > 0) sort.data <- sort.data[ord]
 
 	# Plot heatmap.
-	if(length(sort.data) > 0)
-	    layout(rbind(1:(n.marks + 3)), widths=c(1, rep(3, n.marks), 2, 1))
-	else
-	    layout(rbind(1:(n.marks + 2)), widths=c(1, rep(3, n.marks), 2))
+        extras <- sum(!is.null(expr), !is.null(sort.data))
+	switch(as.character(extras),
+            `0` = layout(rbind(1:(n.marks + 1)), widths=c(1, rep(3, n.marks))),
+	    `1` = layout(rbind(1:(n.marks + 2)), widths=c(1, rep(3, n.marks), 2)),
+	    `2` = layout(rbind(1:(n.marks + 3)), widths=c(1, rep(3, n.marks), 2, 1)))
 	par(mai=c(1.02,0.50,0.82,0.05))
   	
 	n.bins = length(cols)
@@ -91,9 +100,9 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	par(mai=c(1.02,0.05,0.82,0.05))
 	mapply(function(x, y)
 	{
-	    image(pos, 1:nrow(x), t(x), xlab="Position relative to feature",
+	    image(pos, 1:nrow(x), t(x), xlab="Relative Position",
                   xaxt = "n", yaxt = "n", ylab = "Feature", col = cols, main = y)
-	    axis(1, pos, labels = posLabels)		
+	    axis(1, pos, labels = pos.labels)		
 
 	    # Add lines delimiting the cluster boundaries.
 	    bounds <- cumsum(table(cl.id)[cl.ord])[-n.clusters]
@@ -101,25 +110,26 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	}, cvgs, names(c.list))
 
 	par(mai=c(1.02,0.05,0.82,0.50))
-	plot(expr, y = 1:length(expr), yaxs = 'i', pch = 19, xlab = "log2 expression",
-             ylab = NA, yaxt = "n", cex = 0.5)
+        if(!is.null(expr))
+	    plot(expr, y = 1:length(expr), yaxs = 'i', xlab = expr.name, ylab = NA,
+                 yaxt = "n", ...)
 	if(!is.null(sort.data)) plot(sort.data, y = 1:length(sort.data), yaxs = 'i',
-                     pch = 19, xlab = sort.name, ylab = NA, yaxt = "n", cex = 0.5)	
+                     xlab = sort.name, ylab = NA, yaxt = "n", ...)	
 
-	mtext(t.name, line = 0, outer = TRUE)
+	mtext(t.name, line = 0, font = 2, outer = TRUE)
     }
 })
 
 setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
           cap.q = 0.95, cap.type = c("sep", "all"), n.clusters = 5,
-          plot.ord = 1:length(c.list), expr, sort.data = NULL, sort.name = NULL,
-          plot.type = c("line", "heatmap"), cols = NULL, t.name = "Clustered Enrichment")
+          plot.ord = 1:length(c.list), expr = NULL, expr.name = NULL, sort.data = NULL, sort.name = NULL,
+          plot.type = c("line", "heatmap"), cols = NULL, t.name = "Clustered Enrichment", ...)
 {
     plot.type <- match.arg(plot.type)
     cap.type <- match.arg(cap.type)
     cvgs <- tables(c.list)
 
-    if(nrow(cvgs[[1]]) != length(expr))
+    if(!is.null(expr) && nrow(cvgs[[1]]) != length(expr))
 	stop("Number of features does not match length of expression vector.\n")
     if(!is.null(sort.data) && is.null(sort.name))
     	stop("'sort.data' provided, 'sort.name' is not.")
@@ -131,14 +141,14 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
     cvgs <- lapply(cvgs, function(x) {x[x < 0] = 0; x})
 
     cvgs <- lapply(cvgs, scale)
-    if(cap.type == "all") maxCvg <- quantile(do.call(cbind, cvgs), cap.q)
+    if(cap.type == "all") max.cvg <- quantile(do.call(cbind, cvgs), cap.q)
 
     # Find the maximum score allowable, then make any scores bigger be the
     # maximum score.
     cvgs <- lapply(cvgs, function(x)
     {
-	if(cap.type == "sep") maxCvg <- quantile(x, cap.q)
-	x[x > maxCvg] = maxCvg
+	if(cap.type == "sep") max.cvg <- quantile(x, cap.q)
+	x[x > max.cvg] = max.cvg
 	return(x)
     })
 
@@ -148,8 +158,9 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
     cl.id <- kmeans(all, n.clusters, iter.max = 100)$cluster
 
     ccl <- ClusteredCoverageList(c.list, scores = cvgs, cluster.id = cl.id, expr = expr,
-                                 sort.data = sort.data, sort.name = sort.name)
+                                 expr.name = expr.name, sort.data = sort.data,
+                                 sort.name = sort.name)
     clusterPlots(ccl, plot.ord = plot.ord, plot.type = plot.type, cols = cols,
-                 t.name = t.name)
+                 t.name = t.name, ...)
     invisible(ccl)
 })
