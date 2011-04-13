@@ -70,7 +70,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 
     } else { # Plot a heatmap
 	
-        par(oma = c(1, 1, 2, 1))
+        par(oma = c(1, 1, 3, 1))
 	sort.data <- c.list@sort.data
 	sort.name <- c.list@sort.name
 	# Get order of all features next.
@@ -116,7 +116,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	if(!is.null(sort.data)) plot(sort.data, y = 1:length(sort.data), yaxs = 'i',
                      xlab = sort.name, ylab = NA, yaxt = "n", ...)	
 
-	mtext(t.name, line = 0, font = 2, outer = TRUE)
+	mtext(t.name, line = 0, font = 2, cex = 1.5, outer = TRUE)
     }
 })
 
