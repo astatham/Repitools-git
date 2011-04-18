@@ -17,8 +17,7 @@
 }
 \section{Arguments}{
   \describe{
-    \item{x:}{A character vector of BAM paths, a \code{GenomeDataList},
-             \code{GRangesList}, or \code{GRanges} object.}
+    \item{x:}{A character vector of BAM paths, \code{GRangesList}, or \code{GRanges} object.}
     \item{anno:}{A set of genomic features to make windows around a reference point of
                theirs. Either a \code{data.frame} with (at least) colums \code{chr},
                \code{start}, and \code{end}, or a \code{GRanges} object.}
@@ -44,6 +43,7 @@
 \author{Aaron Statham}
 \seealso{\code{\link{annotationBlocksCounts}}, \code{\link{genomeBlocks}}}
 \examples{
+  require(GenomicRanges)
   reads <- GRanges(seqnames = rep("chr1", 5),
                    IRanges(c(3309, 4756, 4801, 4804, 5392), width = 36),
                    strand = c('+', '-', '-', '+', '+'))

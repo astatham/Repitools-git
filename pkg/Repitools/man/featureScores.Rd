@@ -4,12 +4,12 @@
 \alias{featureScores,ANY,GRanges-method}
 \title{Get scores at regular sample points around genomic features.}
 \description{
-  Given a \code{GRanges} / \code{GenomeDataList} / \code{GRangesList} object,
-  or BAM file paths, of reads for each experimental condition, or a \code{matrix}
-  or an \code{AffynetrixCelSet}, and an anntotation of features of interest,
-  scores at regularly spaced positions around the features is calculated. In the
-  case of sequencing data, it is the smoothed coverage of reads divided by the
-  library size. In the case of array data, it is array intensity.
+  Given a \code{GRanges} / \code{GRangesList} object, or BAM file paths, of reads
+  for each experimental condition, or a \code{matrix} or an \code{AffynetrixCelSet},
+  and an anntotation of features of interest, scores at regularly spaced positions
+  around the features is calculated. In the case of sequencing data, it is the smoothed
+  coverage of reads divided by the library size. In the case of array data, it is array
+  intensity.
 }
 \section{Usage}{
   \describe{
@@ -55,8 +55,8 @@
   to create the score matrices.
 }
 \details{
-  If \code{x} is a vector of paths or a \code{GenomeDataList} or \code{GRangesList}
-  object, then \code{names(x)} should contain the types of the experiments.
+  If \code{x} is a vector of paths or \code{GRangesList} object,
+  then \code{names(x)} should contain the types of the experiments.
 
   If \code{anno} is a \code{data.frame}, it must contan the columns \code{chr},
   \code{start}, and \code{end}. Optional columns are \code{strand} and \code{name}.

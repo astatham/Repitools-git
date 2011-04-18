@@ -2,15 +2,16 @@ setOldClass("AffymetrixCelSet")
 
 setGeneric("significancePlots", signature = "x", function(x, ...){standardGeneric("significancePlots")})
 
-setMethod("significancePlots", "GenomeDataList", function(x, coordinatesTable, design=NULL, upStream=7500, downStream=2500, by=100, bw=300, total.lib.size=TRUE, seqLen=NULL, verbose=FALSE, ...) {
-	coordinatesTable$position <- ifelse(coordinatesTable$strand=="+", coordinatesTable$start, coordinatesTable$end)
-	rownames(coordinatesTable) <- coordinatesTable$name
-	blockPos <- seq.int(-upStream, downStream, by)
+setMethod("significancePlots", "GRangesList", function(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, total.lib.size=TRUE, seq.len=NULL, verbose=FALSE, ...) {
+        require(GenomicRanges)
+	anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
+	rownames(anno) <- anno$name
+	blockPos <- seq.int(-up, down, by)
 	if (verbose) cat("made blockPos\n")
-	annoBlocks <- data.frame(chr=rep(coordinatesTable$chr, each=length(blockPos)),
-		start=rep(coordinatesTable$position-bw, each=length(blockPos)),
-		end=rep(coordinatesTable$position+bw, each=length(blockPos)),
-		strand=rep(coordinatesTable$strand, each=length(blockPos)))
+	annoBlocks <- data.frame(chr=rep(anno$chr, each=length(blockPos)),
+		start=rep(anno$position-bw, each=length(blockPos)),
+		end=rep(anno$position+bw, each=length(blockPos)),
+		strand=rep(anno$strand, each=length(blockPos)))
 	annoBlocks$start[annoBlocks$strand=="+"] <- annoBlocks$start[annoBlocks$strand=="+"] + blockPos
 	annoBlocks$end[annoBlocks$strand=="+"] <- annoBlocks$end[annoBlocks$strand=="+"] + blockPos
 	annoBlocks$start[annoBlocks$strand=="-"] <- annoBlocks$start[annoBlocks$strand=="-"] - blockPos
@@ -21,47 +22,7 @@ setMethod("significancePlots", "GenomeDataList", function(x, coordinatesTable, d
 		inUse <- !apply(design==0,1,all)
 		design <- design[inUse,, drop=FALSE]
 	} else inUse <- rep(TRUE, length(x))
-	annoCounts <- annotationBlocksCounts(x[inUse], annoBlocks, seqLen, verbose)
-	if (total.lib.size) {
-		if (verbose) cat("normalising to total library sizes\n")
-		totalReads <- laneCounts(x[inUse])
-		annoCounts <- t(t(annoCounts)/totalReads)*1000000
-	}
-	if (verbose) cat("made annoCounts\n")
-	if (!is.null(design)) {
-		if (verbose) cat("applying design matrix\n")
-		design <- apply(design, 2, function(x) {
-					x[x==1] <- 1/sum(x==1)
-					x[x==-1] <- -1/sum(x==-1)
-					return(x)
-				})
-		annoCounts <- annoCounts %*% design 
-	}
-	annoTable <- matrix(1:nrow(annoCounts), byrow=TRUE, ncol=length(blockPos), nrow=nrow(coordinatesTable), dimnames=list(NULL, blockPos))
-	if (verbose) cat("made annoTable\n")
-	significancePlots(annoCounts, annoTable, removeZeros=FALSE, useMean=TRUE, ...)
-})
-
-setMethod("significancePlots", "GRangesList", function(x, coordinatesTable, design=NULL, upStream=7500, downStream=2500, by=100, bw=300, total.lib.size=TRUE, seqLen=NULL, verbose=FALSE, ...) {
-	coordinatesTable$position <- ifelse(coordinatesTable$strand=="+", coordinatesTable$start, coordinatesTable$end)
-	rownames(coordinatesTable) <- coordinatesTable$name
-	blockPos <- seq.int(-upStream, downStream, by)
-	if (verbose) cat("made blockPos\n")
-	annoBlocks <- data.frame(chr=rep(coordinatesTable$chr, each=length(blockPos)),
-		start=rep(coordinatesTable$position-bw, each=length(blockPos)),
-		end=rep(coordinatesTable$position+bw, each=length(blockPos)),
-		strand=rep(coordinatesTable$strand, each=length(blockPos)))
-	annoBlocks$start[annoBlocks$strand=="+"] <- annoBlocks$start[annoBlocks$strand=="+"] + blockPos
-	annoBlocks$end[annoBlocks$strand=="+"] <- annoBlocks$end[annoBlocks$strand=="+"] + blockPos
-	annoBlocks$start[annoBlocks$strand=="-"] <- annoBlocks$start[annoBlocks$strand=="-"] - blockPos
-	annoBlocks$end[annoBlocks$strand=="-"] <- annoBlocks$end[annoBlocks$strand=="-"] - blockPos
-	if (verbose) cat("made annoBlocks\n")
-	if (!is.null(design)) {
-		stopifnot(all(design %in% c(-1,0,1)), nrow(design)==length(x))
-		inUse <- !apply(design==0,1,all)
-		design <- design[inUse,, drop=FALSE]
-	} else inUse <- rep(TRUE, length(x))
-	annoCounts <- annotationBlocksCounts(x[inUse], annoBlocks, seqLen, verbose)
+	annoCounts <- annotationBlocksCounts(x[inUse], annoBlocks, seq.len, verbose)
 	if (total.lib.size) {
 		if (verbose) cat("normalising to total library sizes\n")
 		totalReads <- elementLengths(x[inUse])
@@ -77,25 +38,27 @@ setMethod("significancePlots", "GRangesList", function(x, coordinatesTable, desi
 				})
 		annoCounts <- annoCounts %*% design 
 	}
-	annoTable <- matrix(1:nrow(annoCounts), byrow=TRUE, ncol=length(blockPos), nrow=nrow(coordinatesTable), dimnames=list(NULL, blockPos))
+	annoTable <- matrix(1:nrow(annoCounts), byrow=TRUE, ncol=length(blockPos), nrow=nrow(anno), dimnames=list(NULL, blockPos))
 	if (verbose) cat("made annoTable\n")
 	significancePlots(annoCounts, annoTable, removeZeros=FALSE, useMean=TRUE, ...)
 })
 
-setMethod("significancePlots", "AffymetrixCelSet", function(x, probeMap=NULL, coordinatesTable=NULL, upStream=7500, downStream=2500, by=100, bw=300, log2adjust=TRUE, verbose=FALSE, ...) {			
+setMethod("significancePlots", "AffymetrixCelSet", function(x, probeMap=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2adjust=TRUE, verbose=FALSE, ...) {
+        require(aroma.affymetrix)
+			
 	if (is.null(probeMap)) {
-		if (is.null(coordinatesTable)) stop("Either probeMap or coordinatesTable must be supplied!")
+		if (is.null(anno)) stop("Either probeMap or anno must be supplied!")
 		probePositions <- getProbePositionsDf( getCdf(x), verbose=verbose )
-		coordinatesTable$position <- ifelse(coordinatesTable$strand=="+", coordinatesTable$start, coordinatesTable$end)
-		rownames(coordinatesTable) <- coordinatesTable$name
+		anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
+		rownames(anno) <- anno$name
 		
 		# run lookup twice.  first to get a list of smaller list of probes to use
-		annot <- annotationLookup(probePositions, coordinatesTable, upStream+bw, downStream+bw, verbose=verbose)
+		annot <- annotationLookup(probePositions, anno, up+bw, down+bw, verbose=verbose)
 		pb <- unique(unlist(annot$indexes, use.names=FALSE))
 		probePositions <- probePositions[pb,]
-		annot <- annotationLookup(probePositions, coordinatesTable, upStream+bw, downStream+bw, verbose=verbose)
+		annot <- annotationLookup(probePositions, anno, up+bw, down+bw, verbose=verbose)
 		lookupT <- makeWindowLookupTable(annot$indexes, annot$offsets,
-				starts = seq(-upStream-bw, downStream-bw, by), ends = seq(-upStream+bw, downStream+bw, by))
+				starts = seq(-up-bw, down-bw, by), ends = seq(-up+bw, down+bw, by))
 	} else {
 		if (verbose) cat("Using supplied probeMap\n")
 		probePositions <- probeMap$probePositions

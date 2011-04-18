@@ -2,10 +2,6 @@ setOldClass("AffymetrixCelSet")
 
 setGeneric("writeWig", function(rs, ...) standardGeneric("writeWig"))
 
-setMethod("writeWig", "GenomeDataList", function(rs, ...) {
-    writeWig(GDL2GRL(rs), ...)
-})
-
 setMethod("writeWig", "GRangesList", function(rs, seqLen, design=NULL, sample=20, dropZero=TRUE, normalise=TRUE, verbose=TRUE) {
 	require(GenomicRanges)	
 

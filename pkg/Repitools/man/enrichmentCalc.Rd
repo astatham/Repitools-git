@@ -1,41 +1,38 @@
 \name{enrichmentCalc}
 \alias{enrichmentCalc}
-\alias{enrichmentCalc,GenomeDataList-method}
-\alias{enrichmentCalc,GRangesList-method}
 \alias{enrichmentCalc,GRanges-method}
+\alias{enrichmentCalc,GRangesList-method}
 \title{Calculate sequencing enrichment}
 \description{Function to calculate enrichment over the whole genome of sequencing reads.}
 
-\section{Usage}{
-  \describe{
-    \code{enrichmentCalc(x, organism, seqLen=NULL)}
-  }
+\usage{
+  \S4method{enrichmentCalc}{GRanges}(x, seq.len = NULL, verbose = TRUE)
+  \S4method{enrichmentCalc}{GRangesList}(x, verbose = TRUE, ...)
 }
-\section{Arguments}{
-  \describe{
-      \item{x:}{A \code{GRangesList}, \code{GRanges}, or \code{GenomeDataList} object.}
-      \item{organism:}{The \code{BSgenome} object to calculate enrichment upon - only used to extract chromosome lengths.}
-      \item{seqLen:}{If sequencing reads need to be extended, the fragment size to be used}
-  }
+\arguments{
+  \item{x}{A \code{GRangesList} or \code{GRanges} object. All chromosome lengths
+           must be stored in the \code{Seqinfo} of this object.}
+  \item{seq.len}{If sequencing reads need to be extended, the fragment size to be used.}
+  \item{verbose}{Whether to print the progress of processing.}
+  \item{...}{Argument \code{seq.len} above, not directly used in the \code{GRangesList} method.}
 }
 
-\section{Details}{
-  \describe{
-    If \code{x} has not been extended, it is extended using the supplied \code{seqLen} and then turned into a coverage object. The number of extended reads covering each base pair of the genome is then tabulated, and returned as a \code{data.frame}.
-  }
+\details{
+  If \code{seq.len} is supplied, \code{x} is firstly extended, and then turned into
+  a coverage object. The number of extended reads covering each base pair of the
+  genome is then tabulated, and returned as a \code{data.frame}.
 }
-\section{Value}{
-  \describe{
-    For the \code{GRanges} method, \code{data.frame} containing columns \code{coverage} and \code{bases}.
-    For the \code{GRangesList} and \code{GenomeDataList} methods, a list of such \code{data.frame}s.
-  }
+\value{
+  For the \code{GRanges} method, \code{data.frame} containing columns
+  \code{coverage} and \code{bases}. For the \code{GRangesList} method,
+  a list of such \code{data.frame}s.
 }
 \author{Aaron Statham}
 \examples{
-library(BSgenome.Hsapiens.UCSC.hg18)
+  require(GenomicRanges)
+  readsFile <- system.file("data", "samplesList.RData", package = "Repitools")
+  load(readsFile)  # GRangesList of reads 'samplesList'
+  seqlengths(samplesList)
 
-readsFile <- system.file("data","samplesList.RData", package="Repitools")
-load(readsFile)  # GRangesList of reads 'samplesList'
-
-tc <- enrichmentCalc(samplesList, seqLen=300, organism=Hsapiens)
+  tc <- enrichmentCalc(samplesList, seq.len = 300)
 }

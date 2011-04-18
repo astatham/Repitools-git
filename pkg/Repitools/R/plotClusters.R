@@ -3,6 +3,8 @@ setGeneric("plotClusters", function(x, s.col, non.cl, ...)
 
 setMethod("plotClusters", "GRanges", function(x, s.col, non.cl, ...)
 {
+    require(GenomicRanges)
+
     elementMetadata(x) <- DataFrame(elementMetadata(x),
                           TSS = as.numeric(ifelse(strand(x) == '+',
                                            start(x),
@@ -26,6 +28,8 @@ setMethod("plotClusters", "GRanges", function(x, s.col, non.cl, ...)
 
 setMethod("plotClusters", "data.frame", function(x, s.col, non.cl, ...)
 {
+    require(GenomicRanges)
+
     s.name <- colnames(x)[s.col]
     summaryGR <- annoDF2GR(x)
     s.col <- which(colnames(elementMetadata(summaryGR)) == s.name)

@@ -4,6 +4,7 @@ setGeneric("featureBlocks", signature = "anno", function(anno, ...)
 setMethod("featureBlocks", "GRanges",
     function(anno, up, down, dist = c("base", "percent"), keep.strand = FALSE)
 {
+    require(GenomicRanges)
     dist <- match.arg(dist)
 
     str <- as.character(strand(anno))

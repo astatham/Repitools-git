@@ -22,6 +22,7 @@
          stored in the first element of the metadata list.}
 \author{Dario Strbenac}
 \examples{
+  library(GenomicRanges)
   grl <- GRangesList(GRanges("chr1", IRanges(5, 10)),
                      GRanges("chr18", IRanges(25, 50)),
                      GRanges("chr22", IRanges(1, 100)))

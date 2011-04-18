@@ -22,6 +22,7 @@
 }
 \author{Dario Strbenac}
 \examples{
+  require(GenomicRanges)
   chrs <- c("chr1", "chr3", "chr7", "chr22")
   starts <- seq(1000, 4000, 1000)
   ends <- seq(1500, 4500, 1000)

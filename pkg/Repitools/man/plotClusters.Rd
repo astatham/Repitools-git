@@ -33,11 +33,12 @@
 }
 \author{Dario Strbenac}
 \examples{
-    g.summary <- GRanges("chr1",
-                         IRanges(seq(1000, 10000, 1000), width = 100),
-                         rep(c('+', '-'), 5),
-                         `t-statistic` = rnorm(10, 8, 2),
-                         cluster = c(0, 0, 0, 0, 0, 1, 1, 1, 1, 0),
-                         name = paste("Gene", 1:10))
-    plotClusters(g.summary, 1, 0, ylim = c(4, 12), lwd = 5)
+  library(GenomicRanges)
+  g.summary <- GRanges("chr1",
+                       IRanges(seq(1000, 10000, 1000), width = 100),
+                       rep(c('+', '-'), 5),
+                       `t-statistic` = rnorm(10, 8, 2),
+                       cluster = c(0, 0, 0, 0, 0, 1, 1, 1, 1, 0),
+                       name = paste("Gene", 1:10))
+  plotClusters(g.summary, 1, 0, ylim = c(4, 12), lwd = 5)
 }

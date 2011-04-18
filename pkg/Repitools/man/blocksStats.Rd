@@ -22,7 +22,7 @@
 }
 \section{Arguments}{
   \describe{
-    \item{x:}{A \code{GenomeDataList}, \code{GRangesList}, \code{AffymetrixCelSet},
+    \item{x:}{A \code{GRangesList}, \code{AffymetrixCelSet},
              or a \code{data.frame} of data. Or a \code{character} vector of BAM
              paths to the location of the BAM files.}
     \item{anno:}{Either a \code{data.frame} or a \code{GRanges} giving the gene
@@ -84,6 +84,7 @@
 \author{Mark Robinson}
 \seealso{\code{\link{annotationLookup}} and \code{\link{annotationBlocksLookup}}}
 \examples{
+  require(GenomicRanges)
   intensities <- matrix(c(6.8, 6.5, 6.7, 6.7, 6.9,
                           8.8, 9.0, 9.1, 8.0, 8.9), ncol = 2)
   colnames(intensities) <- c("Normal", "Cancer")

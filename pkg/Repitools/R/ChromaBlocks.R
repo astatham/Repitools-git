@@ -1,9 +1,5 @@
 setGeneric("ChromaBlocks", function(rs.ip, rs.input, ...){standardGeneric("ChromaBlocks")})
 
-setMethod("ChromaBlocks", c("GenomeDataList", "GenomeDataList"), function(rs.ip, rs.input, ...) {
-    ChromaBlocks(GDL2GRL(rs.ip), GDL2GRL(rs.input), ...)
-})
-
 setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.input, organism, chrs, ipWidth=100, inputWidth=500, preset=NULL, blockWidth=NULL, minBlocks=NULL, extend=NULL, cutoff=NULL, FDR=0.01, nPermutations=5, nCutoffs=20, cutoffQuantile=0.98, verbose=TRUE, seqLen=NULL) {
 
     .mergeOverlaps <- function (query, subject) {

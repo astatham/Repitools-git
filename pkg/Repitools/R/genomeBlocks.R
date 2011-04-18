@@ -4,6 +4,8 @@ setGeneric("genomeBlocks", function(genome, chrs = names(genome), width,
 setMethod("genomeBlocks", "numeric", function(genome, chrs = names(genome), width,
            spacing = width)
 {
+    require(GenomicRanges)
+
     chr.windows <- lapply(chrs, function(x)
                           GRanges(seqnames = names(genome[x]),
                                  ranges = IRanges(start = seq.int(spacing / 2,
@@ -20,6 +22,8 @@ setMethod("genomeBlocks", "numeric", function(genome, chrs = names(genome), widt
 setMethod("genomeBlocks", "BSgenome",
     function(genome, chrs = seqnames(genome), width, spacing = width)
 {
-	chr.lengths <- seqlengths(genome)[chrs]
-	genomeBlocks(chr.lengths, chrs = chrs, width = width, spacing = spacing)
+    require(BSgenome)
+    
+    chr.lengths <- seqlengths(genome)[chrs]
+    genomeBlocks(chr.lengths, chrs = chrs, width = width, spacing = spacing)
 })

@@ -6,8 +6,8 @@ setMethod("getCN", c("GRanges", "GRanges"),
     if(length(input.windows) != nrow(input.counts))
         stop("Rows of counts differ to rows of input regions.\n")
     
+    require(GenomicRanges)
     require(DNAcopy)
-    require(IRanges)	
 
     Mvalues <- log2((input.counts[, 2] / sum(input.counts[, 2])) /
                     (input.counts[, 1] / sum(input.counts[, 1])))

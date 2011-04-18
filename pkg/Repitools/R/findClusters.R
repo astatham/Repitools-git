@@ -1,6 +1,8 @@
 .makeClusters <- function(scores.chr, w.size, n.med, n.consec, cut, count = FALSE,
                           verbose)
 {
+    require(IRanges)
+
     mergeOverlaps <- function(query, subject)
     {
         candidates <- IRanges(slice(coverage(c(query, subject)), lower = 1))

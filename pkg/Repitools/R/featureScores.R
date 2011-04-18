@@ -3,12 +3,13 @@ setGeneric("featureScores", signature = c("x", "anno"), function(x, anno, ...)
 setGeneric(".featureScores", signature = c("x", "y"), function(x, y, ...)
                                            {standardGeneric(".featureScores")})
 
-setClassUnion(".SequencingData", c("character", "GenomeDataList", "GRanges",
-                                  "GRangesList"))
+setClassUnion(".SequencingData", c("character", "GRanges", "GRangesList"))
 
 setMethod(".featureScores", c("GRanges", ".CoverageSamples"),
     function(x, y, anno, up, down, dist, freq, s.width, use.strand = FALSE, verbose)
 {
+    require(GenomicRanges)
+
     # Unpack variables in y.
     pos.labels <- y@pos.labels
     cvg.samps <- y@cvg.samps
@@ -88,7 +89,7 @@ setMethod(".featureScores", c(".SequencingData", "GRanges"),
     function(x, y, up, down, dist = c("base", "percent"), freq, s.width, ...,
              verbose = TRUE)
 {
-
+    require(IRanges)
     dist <- match.arg(dist)
 
     str <- strand(y)
@@ -156,6 +157,8 @@ setMethod(".featureScores", c("matrix", "GRanges"),
 setMethod(".featureScores", c("AffymetrixCelSet", "GRanges"),
     function(x, y, p.anno = NULL, mapping = NULL, ...)
 {
+    require(aroma.affymetrix)
+
     if(is.null(mapping) && is.null(p.anno))
         p.anno <- getProbePositionsDf(getCdf(x), verbose = verbose)
 

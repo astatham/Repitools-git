@@ -1,6 +1,5 @@
 \name{binPlots}
 \alias{binPlots}
-\alias{binPlots,GenomeDataList-method}
 \alias{binPlots,GRangesList-method}
 \alias{binPlots,AffymetrixCelSet-method}
 \alias{binPlots,matrix-method}
@@ -9,16 +8,15 @@
 Using a specified ordering of genes, they are split into multiple bins.  In each bin, the signal across is summarized and displayed visually.  The plots are created in an array, one row for each column of the data matrix and one column for each ordering specified.
 }
 \usage{
-  \S4method{binPlots}{GenomeDataList}(x, coordinatesTable, design=NULL, upStream=7500, downStream=2500, by=100, bw=300, libSize="lane", seqLen=NULL, verbose=FALSE, Acutoff=NULL, ...)
-  \S4method{binPlots}{GRangesList}(x, coordinatesTable, design=NULL, upStream=7500, downStream=2500, by=100, bw=300, libSize="lane", seqLen=NULL, verbose=FALSE, Acutoff=NULL, ...)
-  \S4method{binPlots}{AffymetrixCelSet}(x, probeMap=NULL, coordinatesTable=NULL, upStream=7500, downStream=2500, by=100, bw=300, log2adjust=TRUE, verbose=FALSE, ...)
+  \S4method{binPlots}{GRangesList}(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, libSize="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...)
+  \S4method{binPlots}{AffymetrixCelSet}(x, probeMap=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2adjust=TRUE, verbose=FALSE, ...)   
   \S4method{binPlots}{matrix}(x, lookupTable, ordering, ordLabel, plotType = c("line", "heatmap", "terrain", "boxplot"), nbins = 10, cols = NULL, lwd = 3, lty = 1, sameScale = TRUE, symmScale = FALSE, verbose = FALSE, removeZeros=TRUE, useMean=FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{\code{matrix}, \code{GenomeDataList} or \code{GRangesList} object, or \code{AffymetrixCelSet} object of data to use}
-  \item{probeMap}{A pre-made mapping of probes to a coordinatesTable}
-  \item{coordinatesTable}{\code{data.frame} giving the gene coordinates or regions of interest. The column names of this are \code{chr}, \code{name}, \code{start}, \code{end}, \code{strand}.}
+  \item{x}{\code{matrix}, or \code{GRangesList} object, or \code{AffymetrixCelSet} object of data to use}
+  \item{probeMap}{A pre-made mapping of probes to a anno}
+  \item{anno}{\code{data.frame} giving the gene coordinates or regions of interest. The column names of this are \code{chr}, \code{name}, \code{start}, \code{end}, \code{strand}.}
   \item{lookupTable}{\code{matrix}, e.g. from \code{makeWindowLookupTable}}
   \item{design}{Optional for GDL data - design matrix specifying the contrast to compute (i.e. the samples to use and what differences to take)}
   \item{ordering}{\code{data.frame} of either numeric or factor variables, with the same number of rows as \code{lookupTable}}
@@ -33,13 +31,13 @@ Using a specified ordering of genes, they are split into multiple bins.  In each
   \item{verbose}{Print details of processing.}
   \item{removeZeros}{Remove zero values.}
   \item{useMean}{Whether to use mean instead of median within bins (useful for seq data).}
-  \item{upStream}{number of bases upstream to plot}
-  \item{downStream}{number of bases upstream to plot}
+  \item{up}{number of bases upstream to plot}
+  \item{down}{number of bases upstream to plot}
   \item{by}{how many bases between data points}
   \item{bw}{how many bases up and downstream to be counted}
   \item{log2adjust}{whether to take log2 of array intensities.}
   \item{libSize}{Either the string \code{"ref"} to normalise to a reference or \code{"lane"} to multiply each library to be the same size.}
-  \item{seqLen}{If sequencing reads need to be extended, the fragment size to be used}
+  \item{seq.len}{If sequencing reads need to be extended, the fragment size to be used}
   \item{Acutoff}{If \code{libSize} is \code{"ref"}, this argument must be provided. Otherwise, it must not. Cutoff on the "A" values to take, before calculating trimmed mean.}
   \item{...}{further arguments to send to \code{bxp}}
 }
@@ -69,9 +67,9 @@ The option \code{plotType="boxplot"} is really only suitable for 1- or 2-group p
   # design matrix
   des <- matrix( c(0,1,0,-1), ncol=1, dimnames=list(names(samplesList),"PC-Norm") )
 
-  binPlots(samplesList, annoDF, design=des, verbose=TRUE, seqLen=300, nbins=4,
+  binPlots(samplesList, annoDF, design=des, verbose=TRUE, seq.len=300, nbins=4,
            ordering=expr, ordLabel="expression",plotType="line")
 
-  binPlots(samplesList, annoDF, design=des, verbose=TRUE, seqLen=300, nbins=8,
+  binPlots(samplesList, annoDF, design=des, verbose=TRUE, seq.len=300, nbins=8,
            ordering=expr, ordLabel="expression",plotType="heatmap")
 }

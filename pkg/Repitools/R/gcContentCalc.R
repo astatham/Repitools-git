@@ -1,6 +1,9 @@
 setGeneric("gcContentCalc", function(x, ...){standardGeneric("gcContentCalc")})
 
 setMethod("gcContentCalc", "GRanges", function(x, organism) {
+    require(GenomicRanges)
+    require(BSgenome)
+    
     strand(x) <- "+"
     temp <- getSeq(organism, x, as.character=FALSE)
     tempAlphabet <- alphabetFrequency(temp, as.prob=TRUE)
@@ -8,6 +11,8 @@ setMethod("gcContentCalc", "GRanges", function(x, organism) {
 })
 
 setMethod("gcContentCalc", "data.frame", function(x, window=500, organism) {
+    require(GenomicRanges)
+
     if (is.null(x$position)) x$position <- ifelse(x$strand == '+', x$start, x$end)
     x <- GRanges(x$chr, IRanges(x$position, width=1), seqlengths=seqlengths(organism)[unique(x$chr)])
     x <- resize(x, window, fix="center")
