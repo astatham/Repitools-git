@@ -38,9 +38,9 @@ options(prompt = " ", continue = " ")
 set.seed(4)
 @
 
-\texttt{Repitools} is a package that allows statistics of differential epigenetic marking to be calculated, as well as summaries of genome-wide trends to be visualised in a variety of formats. Some basic quality checking utilities are also available for sequencing data. The utility of \texttt{Repitools} comes from that most of the functionality available is implemented for both microarrays and next generation sequencing, with very similar function calls for both types of data.
+\texttt{Repitools} is a package that allows statistics of absolute or differential binding for ChIP-seq and MeDIP-seq to be calculated, as well as summaries of genome-wide trends to be visualised in a variety of formats. Some basic quality checking utilities are also available for sequencing data. Most of the functionality available is implemented for both microarrays and next generation sequencing, with very similar function calls for both types of data.
 \\ \\
-In this vignette, quality checking of the sequencing data, followed by analysis and visualisation will be demonstrated. A more detailed description of the package can be found in the associated Bioinformatics Applications Note \footnote{\href{http://bioinformatics.oxfordjournals.org/content/26/13/1662.abstract}{Repitools: an R package for the analysis of enrichment-based epigenomic data}}
+In this vignette, quality checks of the sequencing data, followed by analysis and visualisation will be demonstrated. Further description of the package can be found in the associated Bioinformatics Applications Note \footnote{\href{http://bioinformatics.oxfordjournals.org/content/26/13/1662.abstract}{Repitools: an R package for the analysis of enrichment-based epigenomic data}}
 \\ \\
 To start with, load the \texttt{Repitools} package.
 
@@ -48,22 +48,25 @@ To start with, load the \texttt{Repitools} package.
 library(Repitools)
 @
 
-\section{Data}
-A \texttt{GRangesList} of mapped short reads from an Illumina Genome Analyser run of four samples is included with the package. This data has been published and is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE24546}{here}. LNCaP is the cancer cell line, and PrEC is the normal cell line. \texttt{GRanges} objects of mapped files from many popular aligners can be created by first reading them into \textbf{R} with the \texttt{readAligned} function in the \texttt{ShortRead} package, then coerced with \texttt{as(alnRdObj, "GRanges")}.
+\section{Example Datasets}
+A \texttt{GRangesList} of mapped short reads from an Illumina Genome Analyser run of four samples is included with the package. This data has been published and is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE24546}{here}. LNCaP is the cancer cell line, and PrEC is the normal cell line. \texttt{GRanges} objects of mapped files from many popular aligners can be created by first reading them into \textbf{R} with the \texttt{readAligned} function in the \texttt{ShortRead} package, then coerced with \texttt{as(alnRdObj, "GRanges")}. The two convenience methods \texttt{BAM2GRanges} and \texttt{BAM2GRangesList} in \texttt{Repitools} could also be used, if the reads were stored on disk in BAM format. By default, these two methods read in only the uniquely-mapping reads. See the \texttt{ShortRead} package documentation for ideas about how to read other sequencing data into \textbf{R}.
 
 <<label=loadAndShow>>=
+library(GenomicRanges)
 load("samplesList.RData")
+class(samples.list)
 names(samples.list)
+elementLengths(samples.list)
 @
 
-Also, an annotation of genes will be used. The annotation is based on one provided from Affymetrix with their expression arrays \footnote{\href{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}}.
+Also, an annotation of genes will be used. The annotation is based on one provided from Affymetrix with their expression arrays \footnote{\href{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}}. This is to be able to relate the sequencing data gene expression measurements done on an array.
  
 <<label=readAnno>>=
 gene.anno <- read.csv("geneAnno.csv", stringsAsFactors = FALSE)
 head(gene.anno)
 @
 
-\noindent Lastly, there is matrix of gene expression difference data, with each element related to the corresponding row in the gene annotation table. These values are the t-statistics of background corrected and RMA normalised Affymetrix expression array experiments. The unprocessed array data is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19726}{here}. The expression differences matrix will be used when illustrating some of the visualisation functionality later in the vignette.
+\noindent Lastly, there is matrix of gene expression changes, with each element related to the corresponding row in the gene annotation table. These values are the t-statistics of background corrected and RMA normalised Affymetrix expression array experiments. The unprocessed array data is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19726}{here}.
 
 <<label=loadExpr>>=
 load("expr.RData")
@@ -74,57 +77,58 @@ head(expr)
 Notice that two of the samples are MBD2 IPs, and two are inputs. Therefore, the IP samples should differ to the inputs in two ways. Firstly, they should be more CpG rich, since DNA methylation rarely ever occurs outside of this sequence context. Also, since DNA methylation tends to occur in peaks, rather than spread out regions, a higher frequency of bases should have high coverage of reads in the IP samples than in input samples. The \texttt{enrichmentPlot} and \texttt{cpgDensityPlot} functions allow examination of this.
 
 <<label=enrPlot, fig=TRUE>>=
-enrichmentPlot(samples.list, 300, cols = c("blue", "red", "blue", "red"),
+seqinfo(samples.list)
+enrichmentPlot(samples.list, seq.len = 300, cols = c("black", "green", "orange", "red"),
                xlim = c(0, 10), lwd = 2)
 @
 
-\noindent The above code uses the \texttt{Hsapiens} object to get the maximum base of chromosomes. The normalisation of the coverage used is to scale every coverage value by $ 10 \ million / number\_of\_reads\_in\_sample $. 300 is passed in as the \texttt{seq.len} parameter, because that is approximately the real length of the fragments sequenced. As expected, many more bases in the IP samples have high read coverages.
+\noindent The above code uses the SeqInfo annotation of samples.list to get the maximum base of chromosomes. The normalisation of the coverage used is to scale every coverage value by $ 10 \ million / number\_of\_reads\_in\_sample $. 300 is passed in as the \texttt{seq.len} parameter, because that is approximately the real length of the fragments sequenced. As expected, many more bases in the IP samples have high read coverages.
 \\ \\
 Next, the CpG density of reads is examined.
 
 <<label=cpgPlot, fig=TRUE>>=
 library(BSgenome.Hsapiens.UCSC.hg18)
 cpgDensityPlot(samples.list, organism = Hsapiens, w.function = "none", seq.len = 300,
-               cols = c("blue", "red", "blue", "red"), xlim = c(0, 30), lwd = 2)
+               cols = c("black", "green", "orange", "red"), xlim = c(0, 30), lwd = 2)
 @
 
-\noindent This time the \texttt{Hsapiens} annotation is required so that the 300 base DNA sequence (tags are only 36 bp long) may be fetched. The \texttt{w.function} parameter allows the count of CpGs to be weighted. In this example, raw counts are used.
+\noindent The full genome sequence of the organism being analysed is required so that the 300 base DNA sequence (tags are only 36 bp long) may be fetched. In this example, the \texttt{BSgenome} package of the hg18 assembly for human is used. There are many BSgenome objects for other organisms available. See the Bioconductor website for more information. The \texttt{w.function} parameter allows the count of CpGs to be weighted. In this example, raw counts are used.
 \\ \\
 Notice that at lower CpG densities, the two input samples have a higher frequency of reads than the two IP samples. At higher CpG densities, this trend is reversed. This suggests that the DNA methylation IP has worked.
 \\ \\
-\noindent For more general sequencing quality checking, the FastQC \footnote{\href{http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/}{http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/}} Java application has been gaining in popularity due to its speed and variety of results. A container class, \texttt{FastQC}, accessors, and the method \texttt{readFastQC} for reading in the raw Java program text file output and creating a FastQC \textbf{R} object, have been made to provide a framework for the fast development of quality control report generating pipelines. Higher level container classes with accessor methods are \texttt{SequenceQC}, which groups \texttt{FastQC} objects for the aligned and unaligned reads of a single sample together, and \texttt{SequenceQCSet} which is a collection of \texttt{SequenceQC} objects, perhaps of multiple sequencing samples within the same experimental run.
-\\ \\
-An example of turning a SequenceQCSet of the DNA methylation read data into a quality report PDF is demonstrated next.
+% \noindent For more general sequencing quality checking, the FastQC \footnote{\href{http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/}{http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/}} Java application has been gaining popularity due to its speed and variety of results. A container class, \texttt{FastQC}, accessors, and the method \texttt{readFastQC} for reading in the raw Java program text file output and creating a FastQC \textbf{R} object, have been made to provide a framework for the fast development of quality control report generating pipelines. Higher level container classes with accessor methods are \texttt{SequenceQC}, which groups \texttt{FastQC} objects for the aligned and unaligned reads of a single sample together, and \texttt{SequenceQCSet} which is a collection of \texttt{SequenceQC} objects, perhaps of multiple sequencing samples within the same experimental run.
+% \\ \\
+% An example of turning a set of FastQC text output files of the DNA methylation read data into a quality report PDF is demonstrated next.
 
-<<label=QCreport>>=
-load("QCset.RData")
-summary(QCset)
+% <<label=QCreport>>=
+% load("QCset.RData")
+% summary(QCset)
 
-pdf("QCreport.pdf", height = 8, width = 12)
-genQC(QCset, "DNA Methylation Experiment")
-dev.off()
-@
+% pdf("QCreport.pdf", height = 8, width = 12)
+% genQC(QCset, "DNA Methylation Experiment")
+% dev.off()
+% @
 
-Click here to see the report. \attachfile[icon=Paperclip]{QCreport.pdf}
-\\ \\
-When looking at the base distributions of the inputs, for either all of the reads, or the aligned subset, it can be seen that the frequency of A or T is always more than the G or C frequency. This mirrors the background distribution of the human genome. In the IP samples, the G or C frequency has risen, and the A or T has dropped, as would be expected when enriching for GC rich DNA methylated sequences.
-\\ \\
-This mismatches by cycles plots show that the IP samples tend to have a bias of G being called as T, and this is independent of the sequencing cycle. PrEC input has a tendency to miscall T as G more often than any other error, no matter the cycle.
+% Click here to see the report. \attachfile[icon=Paperclip]{QCreport.pdf}
+% \\ \\
+% When looking at the base distributions of the inputs, for either all of the reads, or the aligned subset, it can be seen that the frequency of A or T is always more than the G or C frequency. This mirrors the background distribution of the human genome. In the IP samples, the G or C frequency has risen, and the A or T has dropped, as would be expected when enriching for GC rich DNA methylated sequences.
+% \\ \\
+% This mismatches-by-cycles plots show that the IP samples tend to have a bias of G being called as T, and this is independent of the sequencing cycle. PrEC input has a tendency to miscall T as G more often than any other error, no matter the cycle.
 
-\section{Analyses and Visualisations}
+\section{Analyses}
 
-The \texttt{blocksStats} function is a convenient way to do a statistical test of differential enrichment between two groups or treatments, for counts in windows surrounding some genomic landmarks, like TSSs. The function leverages the package \texttt{edgeR}'s modelling of counts as negative binomial distributed and its adaptation of Fisher's exact test to overdispersed data.
+\subsection{Statistics of Differential Enrichment}
+The \texttt{blocksStats} function is a convenient way to do a statistical test of differential enrichment between two groups or treatments, for counts in windows. The windows can be relative to some genomic landmarks, like TSSs, and their size can be specified with the \texttt{up} and \texttt{down} parameters. If \texttt{up} and \texttt{down} are not provided, then the windows defined by that start and end coordinates of the annotation are used. The function leverages \texttt{edgeR}'s count modelling and its adaptation of Fisher's exact test for assessing differential enrichment.
 
 <<label = doStats>>=
-design.matrix <- matrix(c(0, -1, 0, 1), dimnames = list(names(samples.list),
-                        "Cancer - Normal Methylation"))
+design.matrix <- matrix(c(0, -1, 0, 1), dimnames = list(names(samples.list), "C-N"))
 design.matrix
-stats <- blocksStats(samples.list, gene.anno, 2000, 0, 300, design.matrix)
-stats <- stats[order(stats$`adj.p.vals_Cancer - Normal Methylation`), ]
+stats <- blocksStats(samples.list, gene.anno, up = 2000, down = 0, seq.len = 300, design = design.matrix)
+stats <- stats[order(stats$`adj.p.vals_C-N`), ]
 head(stats)
 @
 
-\noindent The example calculates statistics on TSS regions which start 2000 bases upstream of the TSS and finish at the TSS, after the reads have been extended to being 300 bases long. A coverage plot from UCSC browser illustrates the best found region. The coverage values are scaled to be as if there were 10 million reads in each lane.
+\noindent The example calculates statistics on TSS regions which start 2000 bases upstream of the TSS and finish at the TSS, after the reads have been extended to being 300 bases long. A coverage plot from UCSC browser illustrates the best found region. By default, the coverage values are scaled to be as if there were 10 million reads in each lane.
 
 \begin{figure}[!h]
     \begin{center}
@@ -132,10 +136,30 @@ head(stats)
     \end{center}
 \end{figure}
 
+\subsection{Domains of Concordant Change}
+Another analysis of interest for the epigenomics research community is to find regions of the genome where epigenetic marks or changes in such marks occur in consecutive genes on a particular chromosome. The function \texttt{findClusters} addresses this need. The method of determining clusters is to look through the column of scores for a set of consecutive scores in the same direction. Which potential clusters are significant is determined by randomising the ordering of the statistics column a number of times, and counting the number of clusters found in the real statistics column and the randomised statistics columns, from a loose cutoff to a tight cutoff, and choosing the cutoff to be the first cutoff that meets or is below the user-specified FDR. Importantly, the table must be pre-sorted in positional order. This allows the user to use whatever definition of position they want and sort by that definition.
+
+<<label = findClusters>>=
+stats.table <- cbind(gene.anno, expr)
+stats.table$pos <- ifelse(stats.table$strand == '+', stats.table$start, stats.table$end)
+pos.order <- order(stats.table$chr, stats.table$pos)
+stats.table <- stats.table[pos.order, ]
+stats.clustered <- findClusters(stats.table, score.col = 7, w.size = 5, n.med = 2, n.consec = 3, cut.samps = seq(-2, -10, -2), maxFDR = 0.05, trend = "down", n.perm = 10)
+cluster.1 <- which(stats.clustered$cluster == 1)
+stats.clustered[cluster.1, ]
+@
+
+\noindent In this example, a running window of 5 consecutive genes is run across every chromosome, and the median value of those 5 genes is assigned to the middle gene. If, in the 5-gene window, there are at least 2 genes that have an assigned median above the cutoff being used (cutoffs of -2, -4, -6, -8, and -10 are tried), then those genes are candidate cluster-generating genes. Starting from a candidate gene, and working outwards until encountering a positive t-statistic, if a consecutive run of at least 3 genes with t-statistic being negative could be made, then this forms a cluster. The default FDR of 0.05 is used.
+
+\section{Visualisations}
+
+\subsection{Relating Epigenetics and Expression}
 \noindent Epigenomic data is often gathered with other data, such as gene expression. It may be of interest to see the profile of epigenetic mark enrichment at a variety of distances from TSSs, and stratify this into groups by the expression of genes. The \texttt{binPlots} function is a convenient way to look at these interactions.
 
 <<label = binPlotsHeatmap, fig = TRUE, height = 7, width = 8>>=
-binPlots(samples.list, gene.anno, design = design.matrix, by = 500, bw = 500, seq.len = 300, ordering = expr, ordLabel = "Expression t-stat", plotType = "heatmap", nbins = 25)
+binPlots(samples.list, gene.anno, design = design.matrix, up = 7500, down = 2500, 
+         by = 500, bw = 500, seq.len = 300, ordering = expr, ordLabel = "Expression t-stat",
+         plotType = "heatmap", nbins = 25)
 @
 
 \noindent This example made counts in 500 base non - overlapping windows between -7500 bases upstream and 2500 bases downstream (the default range) for each gene, then split them into categories based on the expression difference value, and averaged over all counts for each particular window and expression category. It is encouraging to see that the lowest level of expression has a rather fine enrichment of DNA methylation about 2000 bases either side of the TSS. Apart from the heatmap visualisation, there are a number of other styles. Details can be found in the documentation of the function.
@@ -143,29 +167,33 @@ binPlots(samples.list, gene.anno, design = design.matrix, by = 500, bw = 500, se
 \noindent To demonstrate how similar it is to generate another style of binned plot, the next example shows the same data as a line-plot. Note that the function call is the same, apart from the \texttt{plotType} parameter. Notice the spike in DNA methylation for the set of lowest expressed genes, which form the blue line.
 
 <<label = binPlotsLine, fig = TRUE, height = 7, width = 8>>=
-binPlots(samples.list, gene.anno, design = design.matrix, by = 500, bw = 500,
-         seq.len = 300, ordering = expr, ordLabel = "Expression t-stat",
-         plotType = "line", nbins = 10)
+binPlots(samples.list, gene.anno, design = design.matrix, up = 7500, down = 2500,
+         by = 500, bw = 500, seq.len = 300, ordering = expr, ordLabel = "Expression t-stat",
+         plotType = "line", nbins = 5)
 @
 
+\subsection{Gene Set Enrichment}
 Some genes may be of interest to the researcher for some reason. This subset of genes may be known to be strongly marked with another epigenetic mark, or change in expression in the same direction strongly, or many other reasons. No matter what the reason for selecting the subset is, the profile of intensities or counts can be plotted versus the profile of randomly selected gene lists and compared with the \texttt{significancePlots} function. In the following example, it will be checked whether the DNA methylation profile of genes losing expression is significantly different to random gene sets.
 
 <<label = signifPlots, fig = TRUE, width = 8>>=
 which.loss <- which(expr < -3)
-significancePlots(samples.list, gene.anno,
+significancePlots(samples.list, anno = gene.anno, up = 7500, down = 2500,
                   geneList = list(`Downregulated Genes` = which.loss),
                   design = design.matrix, by = 500, bw = 500,
                   seq.len = 300)
 @
 
-\noindent The blue region forms the null distribution that was created by sampling random gene lists of the same size as the user-specified gene list a number of times, as set by the \texttt{nSamples} parameter. By default, the null region is a between the 0.025 and 0.975 quantiles of the null distribution. In this example, it appears that the expression-losing gene set has a significant gain of methylation 2000 bases either side of the TSSs, in comparison to random sets of other genes.
+\noindent The blue region forms the null distribution that was created by sampling random gene lists of the same size as the user-specified gene list a number of times, as set by the \texttt{nSamples} parameter. By default, the null region is a between the 0.025 and 0.975 quantiles of the null distribution. In this example, it appears that the genes silenced in cancer have a significant gain of methylation 2000 bases either side of the TSSs, in comparison to random sets of other genes.
 \\ \\
-clusterPlots is another way to look at read depth at regular positions around a feature. The current usage of this function is for when there are multiple epigenetic marks for the same sample. The first step is to use \texttt{featureScores} to get the coverage tables, which essentially gives a list of coverage tables for the samples used. \texttt{clusterPlots} is then called, which does the simple and fast k-means clustering, or if the user wants to use their own clustering algorithm, the cluster ID of each feature can be passed in. In any case, the features are grouped by their cluster memberships and plotted as either a heatmap with one row for every feature, or a set of lineplots showing the average coverage of all features belonging to each cluster. If gene expression data is also available, it can be plotted alongside the heatmaps.
+clusterPlots is another way to look at read depth at regular positions around a feature. The first step is to use \texttt{featureScores} to get the coverage tables, which essentially gives a list of coverage tables for the samples used. \texttt{clusterPlots} is then called, which does the simple and fast k-means clustering, or if the user wants to use their own clustering algorithm, the cluster ID of each feature can be passed in. In any case, the features are grouped by their cluster memberships and plotted as either a heatmap with one row for every feature, or a set of lineplots showing the average coverage of all features belonging to each cluster. If gene expression data is also available, it can be plotted alongside the heatmaps.
 \\ \\
-Data from the Human Reference Epigenome Mapping Project is used to demonstrate this visualisation. The data was downloaded from \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE16256}{here}.
+Data from the Human Reference Epigenome Mapping Project is used to demonstrate this visualisation. The data was downloaded from \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE16256}{here}. Samples \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466734}{GSM466734}, \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466737}{GSM466737}, and \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466739}{GSM466739} are used.
 
 <<label=cluPlots>>=
 load("H1samples.RData")
+class(H1samples)
+names(H1samples)
+elementLengths(H1samples)
 cvgs <- featureScores(H1samples, gene.anno, up = 5000, down = 2000, dist = "base",
                       freq = 1000, s.width = 1000)
 @
@@ -190,31 +218,37 @@ dev.off()
 \end{figure}
 
 \noindent It appears that high levels of H3K36me3 are associated with low levels of H3K4me1.
-\\ \\
-Another analysis of interest for the epigenomics research community is to find regions of the genome where epigenetic marks or changes in such marks occur in consecutive genes on a particular chromosome. The function \texttt{findClusters} addresses this need. The method of determining clusters is to look through the column of statistics for a set of consecutive scores in the same direction. Which potential clusters are significant is determined by randomising the ordering of the statistics column a number of times, and counting the number of clusters found in the real statistics column and the randomised statistics columns, from a loose cutoff to a tight cutoff, and choosing the cutoff to be the first cutoff that meets or is below the user-specified FDR. Importantly, the table must be pre-sorted in positional order. This allows the user to use whatever definition of position they want and sort by that definition.
-
-<<label = findClusters>>=
-stats.table <- cbind(gene.anno, expr)
-stats.table$pos <- ifelse(stats.table$strand == '+', stats.table$start, stats.table$end)
-pos.order <- order(stats.table$chr, stats.table$pos)
-stats.table <- stats.table[pos.order, ]
-stats.clustered <- findClusters(stats.table, 8, 5, 2, 3, seq(2, 10, 2), trend = "up")
-cluster.1 <- which(stats.clustered$cluster == 1)
-stats.clustered[cluster.1, ]
-@
-
-\noindent In this example, a running window of 5 consecutive genes is run across every chromosome, and the median value of those 5 genes is assigned to the middle gene. If, the 5-gene window there are at least 2 genes that have an assigned median above the cutoff being used (cutoffs of 2, 4, 6, 8, and 10 are tried), then those genes are candidate cluster-generating genes. Starting from a candidate gene, and working outwards until encountering a negative t-statistic, if a consecutive run of at least 3 genes with t-statistic being positive could be made, then this forms a cluster.
 
 \section{Utility Functions}
 These functions perform some task that is commonly made with the data, but is not a formal analysis.
-\\ \\
+\subsection{Windows and Counts}
 Often, it is required to create a set of windows covering the entire genome, for some analysis. The function \texttt{genomeBlocks} does this.
 
 <<label = genomeBlocks>>=
-genomeBlocks(Hsapiens, 1:25, 5000)
+genomeBlocks(Hsapiens, chrs = 1:25, width = 5000)
 @
 
 \noindent This example makes a \texttt{GRanges} object of 5 kb windows along all chromosomes.
+\\ \\
+\texttt{annotationCounts} is useful to tally the counts of reads surrounding some set of genomic landmarks. \texttt{annotationBlocksCounts} is the analogous function for counting in user-specified regions of the genome.
+
+<<label = annoCounts>>=
+annotationCounts(samples.list, head(gene.anno), up = 2000, down = 500, seq.len = 300)
+@
+
+\noindent This example counts reads that fall within 2000 bases upstream and 500 bases downstream of the first six gene TSSs in the gene annotation table.
+
+\subsection{Characteristics of the DNA sequence}
+It would be useful to know when seeing a lack of reads in some windows, if the mappability of the window is the cause. Some regions of the genome have low complexity sequence, where reads are unlikely to map uniquely to. The function \texttt{mappabilityCalc} calculates the percentage of each region that can be mapped to by reads generated from the experiment. It operates on a user-created \texttt{BSgenome} object of a masked genome sequence. The definition of which bases are mappable and which are not depends on the fragment length of the sequencing technology used. Therefore, there is no one masked \texttt{BSgenome} object that can be used by all users. Note that by masking, it is meant replacing the unmappable reference sequence bases by 'N', not creating a built-in mask.
+
+<<label=mappabilityCalc>>=
+library(BSgenome.Hsapiens36bp.UCSC.hg18mappability)
+locations <- data.frame(chr = c("chr4", "chr9"),
+                        position = c(50000000, 100000000))
+mappabilityCalc(locations, window = 500, organism = Hsapiens36bp)
+@
+
+\noindent The region on chromosome 4 is completely unmappable, whereas the region on chromosome 9 is almost completely mappable.
 \\ \\
 The researcher might have a set of locations that they want to know the CpG density of.
 
@@ -223,24 +257,6 @@ cpgDensityCalc(head(gene.anno), window = 100, organism = Hsapiens)
 @
 
 \noindent This example calculates the CpG density of a window 100 bases either side of the TSS for the first six genes in the gene annotation table. By default, the CpG density is just the raw number of counts in the windows. There are also linearly, exponentially and logarithmically decaying weight schemes available.
-\\ \\
-\noindent \texttt{annotationCounts} is useful to understand the counts of reads surrounding some landmarks, like TSSs. \texttt{annotationBlocksCounts} is the analogous function for counting in user-specified regions of the genome.
-
-<<label = annoCounts>>=
-annotationCounts(samples.list, head(gene.anno), 2000, 500, 300)
-@
-
-\noindent This example counts reads that fall within 2000 bases upstream and 500 bases downstream of the first six genes in the gene annotation table.
-\\ \\
-\noindent It would be good to know when seeing a lack of reads in some windows, if the mappability of the window is the cause. Some regions of the genome have low complexity sequence, and it is common practice in the analysis of sequencing data to discard reads that map to multiple locations in the genome. The function \texttt{mappabilityCalc} calculates the percentage of each region that can be mapped to by reads generated from the experiment. It operates on a user-created \texttt{BSgenome} object of a masked genome sequence. The definition of which bases are mappable and which are not depends on the fragment length of the sequencing technology used. Therefore, there is no one masked \texttt{BSgenome} object that can be used by all users. Note that by masking, it is meant replacing the unmappable reference sequence bases by 'N', not creating a built-in mask.
-<<label=mappabilityCalc>>=
-library(BSgenome.Hsapiens36bp.UCSC.hg18mappability)
-locations <- data.frame(chr = c("chr4", "chr9"),
-                        position = c(50000000, 100000000))
-mappabilityCalc(locations, organism = Hsapiens36bp)
-@
-
-\noindent The region on chromosome 4 is completely unmappable, whereas the region on chromosome 9 is almost completely mappable.
 
 \section{Summary}
 Repitools has a number of useful functions for quality checking, analysis, and comparison of trends. Many of the functions work seamlessly on array data, as well as sequencing data. Also, there are numerous utility functions, that perform some common task in the investigation of epigenomic data. Consult the package documentation for instructions on how to use functions that were not demonstrated by this vignette.

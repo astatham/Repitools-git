@@ -4,8 +4,9 @@ Date: 2011/4/14
 Title: Epigenomic tools
 Author: Mark Robinson <mrobinson@wehi.edu.au>
 Maintainer: Mark Robinson <mrobinson@wehi.edu.au>
+LazyLoad: Yes
 Depends: R (>= 2.13.0), methods
-Imports: GenomicRanges, IRanges, BSgenome
+Imports: GenomicRanges, IRanges, BSgenome, R.oo
 Suggests: BSgenome, IRanges, gplots, grid, MASS, ShortRead, gsmoothr, BSgenome.Hsapiens.UCSC.hg18, edgeR, chipseq, DNAcopy, Ringo, aroma.affymetrix, zoo, RepitoolsExamples
 Description: Tools for the analysis of enrichment-based epigenomic data.  Features include summarization and visualization of epigenomic data across promoters according to gene expression context, finding regions of differential methylation/binding, etc. 
 License: LGPL version 2 or newer

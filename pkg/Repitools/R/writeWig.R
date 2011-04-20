@@ -1,5 +1,3 @@
-setOldClass("AffymetrixCelSet")
-
 setGeneric("writeWig", function(rs, ...) standardGeneric("writeWig"))
 
 setMethod("writeWig", "GRangesList", function(rs, seqLen, design=NULL, sample=20, dropZero=TRUE, normalise=TRUE, verbose=TRUE) {

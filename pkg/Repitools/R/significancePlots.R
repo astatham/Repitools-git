@@ -1,5 +1,3 @@
-setOldClass("AffymetrixCelSet")
-
 setGeneric("significancePlots", signature = "x", function(x, ...){standardGeneric("significancePlots")})
 
 setMethod("significancePlots", "GRangesList", function(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, total.lib.size=TRUE, seq.len=NULL, verbose=FALSE, ...) {

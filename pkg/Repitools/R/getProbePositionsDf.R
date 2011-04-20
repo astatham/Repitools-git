@@ -1,7 +1,7 @@
+setOldClass("AffymetrixCdfFile")
+
 setGeneric("getProbePositionsDf", function(cdf, ...)
            {standardGeneric("getProbePositionsDf")})
-
-setOldClass("AffymetrixCdfFile")
 
 setMethod("getProbePositionsDf", "AffymetrixCdfFile",
     function(cdf, chrs = NULL, ..., verbose = TRUE)

@@ -26,13 +26,13 @@
 	# Minimum consecutive genes above score cutoff.
         cl.final <- cl.candidates[width(cl.candidates) >= n.consec]
 		
-        if(count == TRUE)
+        if(count)
 	    length(cl.final)
 	else
 	    as.numeric(coverage(cl.final, width = length(x)))
     }
 
-    if(count == TRUE)
+    if(count)
     	apply(scores.chr, 2, clusterScores)
     else
     	clusterScores(scores.chr[, 1])
@@ -54,7 +54,6 @@ findClusters <- function(stats, score.col, w.size = 5, n.med, n.consec, cut.samp
         scores <- -stats[, score.col]
     else
         scores <- stats[, score.col]
-    cut.abs <- abs(cut.samps)
 
     perms <- 1:n.perm
     perm.scores <- sapply(perms, function(x) scores[sample(nrow(stats))])
@@ -62,10 +61,10 @@ findClusters <- function(stats, score.col, w.size = 5, n.med, n.consec, cut.samp
     chr.scores <- split(data.frame(scores, perm.scores), stats$chr)
 
     # Find the number of clusters at each cutoff, in the real and permuted data.
-    clusts <- lapply(cut.abs, function(x){
+    clusts <- lapply(cut.samps, function(x){
                      if(verbose == TRUE) message("Counting clusters at cutoff ", x)
                      n.clusts.chrs <- lapply(chr.scores, .makeClusters, w.size,
-                                             n.med, n.consec, x, TRUE, verbose)
+                                             n.med, n.consec, abs(x), TRUE, verbose)
                      n.clusts <- colSums(do.call(rbind, n.clusts.chrs))
                      
                      # Element 1 : Number of clusters in real data.
@@ -83,15 +82,14 @@ findClusters <- function(stats, score.col, w.size = 5, n.med, n.consec, cut.samp
                     })
 
     FDRtable <- data.frame(cutoff = cut.samps, FDR = allFDR)
-    best.cut <- cut.abs[match(TRUE, allFDR < maxFDR)]
+    best.cut <- cut.samps[match(TRUE, allFDR < maxFDR)]
     
-    if(verbose == TRUE)
-        message("Using the cutoff ", ifelse(trend == "up", best.cut, -best.cut),
-                " for a FDR of < ", maxFDR)
+    if(verbose)
+        message("Using the cutoff ", best.cut, " for a FDR of < ", maxFDR)
 
     in.clust <- unlist(lapply(chr.scores,
                               function(x) .makeClusters(x, w.size, n.med, n.consec,
-                                                        best.cut)
+                                                        abs(best.cut))
                       ))
 
     # Join adjoining clusters, keeping consecutive indexing.
@@ -112,7 +110,7 @@ findClusters <- function(stats, score.col, w.size = 5, n.med, n.consec, cut.samp
 
     stats$cluster <- in.clust
 
-    if(getFDRs == TRUE)
+    if(getFDRs)
     	list(table = stats, FDRs = FDRtable)
     else
     	stats

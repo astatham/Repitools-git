@@ -1,5 +1,3 @@
-setOldClass("AffymetrixCelSet")
-
 setGeneric("blocksStats", function(x, anno, ...){standardGeneric("blocksStats")})
 setGeneric(".blocksStats", function(x, anno, ...){standardGeneric(".blocksStats")})
 
