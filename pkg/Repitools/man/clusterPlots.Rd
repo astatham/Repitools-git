@@ -11,11 +11,11 @@
 \usage{
   \S4method{clusterPlots}{ClusteredCoverageList}(
      c.list, plot.ord = 1:length(c.list), plot.type = c("line", "heatmap"),
-     cols = NULL, t.name = "Clustered Enrichment", ...)
+     symm.scale = NULL, cols = NULL, t.name = NULL, verbose = TRUE, ...)
   \S4method{clusterPlots}{ScoresList}(c.list, scale = function(x) x,
     cap.q = 0.95, cap.type = c("sep", "all"), n.clusters = 5,
     plot.ord = 1:length(c.list), expr, expr.name, sort.data = NULL, sort.name = NULL,
-    plot.type = c("line", "heatmap"), cols = NULL, t.name = "Clustered Enrichment", ...)
+    plot.type = c("line", "heatmap"), cols = NULL, t.name = NULL, verbose = TRUE, ...)
 }
 \arguments{
   \item{c.list}{A \linkS4class{ScoresList} or \linkS4class{ClusteredCoverageList}
@@ -33,10 +33,13 @@
   \item{sort.data}{A vector of values to sort the features within a cluster on.}
   \item{sort.name}{Label to place under the \code{sort.data} plot.}
   \item{plot.type}{Style of plot to draw.}
+  \item{symm.scale}{Whether to make lineplot y-axis or heatmap intensity centred
+                    around 0. By default, all plots are not symmetrically ranged.}
   \item{cols}{The colours to use for the lines in the lineplot or intensities in
               the heatmap.}
   \item{t.name}{Title to use above all the heatmaps. Ignored when lineplots are
                 drawn.}
+  \item{verbose}{Whether to print the progress of processing.}
   \item{...}{Further graphical paramters passed to \code{plot}, that influence how the
              points of the expression and sort data plots will look.}
 }
@@ -46,15 +49,21 @@
 }
 \details{
   A \code{ClusteredCoverageList} should be created by the user, if they wish to do
-  some custom clustering on the coverage matrices. Otherwise, if the user is happy
-  with k-means clustering, then the \code{ScoresList} object as output by
-  \code{featureScores()} can be directly used. If called with a \code{ScoresList},
+  some custom clustering and normalisation on the coverage matrices. Otherwise, if
+  the user is happy with k-means clustering, then the \code{ScoresList} object as output
+  by \code{featureScores()} can be directly used. If called with a \code{ScoresList},
   then the matrices for each coverage type are joined, scaling and capping is done,
   and k-means clustering is performed to get the cluster membership of each feature.
-  Then a \code{ClusteredCoverageList} object is created, and used. If called with a
-  \code{ClusteredCoverageList}, no scaling or capping is done, so it is the user's
-  responsibility to give the scaled and capped coverage matrices when creating the
-  \code{ClusteredCoverageList} object.
+  Then a \code{ClusteredCoverageList} object is created, and used. The clusters are
+  guaranteed to be given IDs in ascending order of median cluster expression, if it
+  is provided. If called with a \code{ClusteredCoverageList}, no scaling or capping
+  is done, so it is the user's responsibility to normalise the coverage matrices as
+  they see fit, when creating the \code{ClusteredCoverageList} object.
+
+  If a \code{ClusteredCoverageList} object is subsetted, the original data range is
+  saved in a private slot, so that if the user wants to plot a subset of the features,
+  such as a certain cluster, for example, the intensity range of the heatmap,
+  or the y-axis range of the lineplot will be the same as before subsetting.
 
   If expression data is given, the median expression level of each cluster is
   calculated, and the clusters are plotted in order of increasing expression. If

@@ -40,9 +40,9 @@ setMethod("[", "ScoresList",
     function(x, i)
     {
 	new("ScoresList", names = x@names[i], anno = x@anno, scores = x@scores[i],
-	                    up = x@up, down = x@down, dist = x@dist,
-			    freq = x@freq, s.width = x@s.width[i])
-	})
+	                  up = x@up, down = x@down, dist = x@dist,
+			  freq = x@freq, s.width = x@s.width[i])
+    })
 
 setReplaceMethod("names", "ScoresList",
     function(x, value)
@@ -55,12 +55,23 @@ setReplaceMethod("names", "ScoresList",
     }
 )
 
+setGeneric("subsetRows", function(x, i) {standardGeneric("subsetRows")})
+setMethod("subsetRows", "ScoresList",
+    function(x, i)
+{
+    new("ScoresList", names = x@names, anno = x@anno[i],
+                      scores = lapply(x@scores, function(y) y[i, ]),
+                      up = x@up, down = x@down, dist = x@dist,
+                      freq = x@freq, s.width = x@s.width)
+})
+
 setClass("ClusteredCoverageList", representation(
                                     cluster.id = "numeric",
 				    expr = "ANY",
                                     expr.name = "ANY",
 				    sort.data = "ANY",
-				    sort.name = "ANY"),
+				    sort.name = "ANY",
+                                    .old.ranges = "ANY"),
                        contains = "ScoresList")
 
 setMethod("show", "ClusteredCoverageList",
@@ -76,8 +87,9 @@ setMethod("show", "ClusteredCoverageList",
 	cat("Smoothing:", paste(object@s.width, collapse = ", "), "bases.\n")
 	cat("Sampling: ", object@freq, ' ', dist.label, ".\n",  sep = '')
         if(!is.null(object@expr))
-            cat("Feature Expressions:", object@expr.name, paste('\n', paste(head(object@expr),
-	        collapse = ", "), ", ...\n", sep = ''))
+            cat("Feature Expressions:", object@expr.name,
+                paste('\n', paste(head(round(object@expr, 2)), collapse = ", "),
+                ", ...\n", sep = ''))
 	cat("Feature Clusters:", paste(paste(head(object@cluster.id),
 	    collapse = ", "), ", ...\n", sep = ''))
 	if(!is.null(object@sort.data))
@@ -102,13 +114,33 @@ setMethod("ClusteredCoverageList", "ScoresList",
 
 setMethod("[", "ClusteredCoverageList",
     function(x, i)
-    {
-	new("ClusteredCoverageList", names = x@names[i], scores = x@scores[i],
-	    anno = x@anno, up = x@up, down = x@down, dist = x@dist,
-	    freq = x@freq, s.width = x@s.width[i], cluster.id = x@cluster.id,
-	    expr = x@expr, expr.name = x@expr.name, sort.data = x@sort.data,
-            sort.name = x@sort.name)
+{
+    new("ClusteredCoverageList", names = x@names[i], scores = x@scores[i],
+	anno = x@anno, up = x@up, down = x@down, dist = x@dist,
+	freq = x@freq, s.width = x@s.width[i], cluster.id = x@cluster.id,
+	expr = x@expr, expr.name = x@expr.name, sort.data = x@sort.data,
+        sort.name = x@sort.name)
     })
+
+setMethod("subsetRows", "ClusteredCoverageList",
+    function(x, i)
+{
+    old.ranges <- lapply(x@scores, range)
+    new("ClusteredCoverageList", names = x@names,
+        scores = lapply(x@scores, function(y) y[i, ]),
+	anno = x@anno[i], up = x@up, down = x@down, dist = x@dist,
+	freq = x@freq, s.width = x@s.width, cluster.id = x@cluster.id[i],
+	expr = x@expr[i], expr.name = x@expr.name, sort.data = x@sort.data[i],
+        sort.name = x@sort.name, .old.ranges = old.ranges)
+})
+
+setGeneric("clusters", function(x, ...)
+           {standardGeneric("clusters")})
+setMethod("clusters", "ClusteredCoverageList",
+    function(x)
+{
+    x@cluster.id
+})
 
 # A collection of variables that describe where the sampling will happen.
 # An S4 class, so that they are created once, then dispatched on when

@@ -5,6 +5,8 @@
 \alias{ClusteredCoverageList,ScoresList-method}
 \alias{show,ClusteredCoverageList-method}
 \alias{[,ClusteredCoverageList-method}
+\alias{subsetRows,ClusteredCoverageList-method}
+\alias{clusters,ClusteredCoverageList-method}
 
 \title{Container for coverage matrices with clustering results.}
 \description{
@@ -46,6 +48,24 @@
     \item{}{
 	\code{x[i]}
 	Creates a ClusteredCoverageList object, keeping only the \code{i} matrices.
+    }
+    \item{}{
+	\code{subsetRows(x, i)}
+	Creates a ClusteredCoverageList object, keeping only the \code{i} features.
+    }
+    \item{}{
+	\code{clusters(x)}
+	Creates a ClusteredCoverageList object, keeping only the \code{i} features.
+    }
+  }
+}
+\section{Accessors}{
+  In the following code snippets, \code{x} is a ClusteredCoverageList object.
+
+  \describe{
+    \item{}{
+	\code{clusters(x)}
+	Get the cluster ID of each feature.
     }
   }
 }

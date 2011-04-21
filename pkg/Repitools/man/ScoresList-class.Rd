@@ -9,6 +9,7 @@
 \alias{length,ScoresList-method}
 \alias{show,ScoresList-method}
 \alias{[,ScoresList-method}
+\alias{subsetRows,ScoresList-method}
 
 \title{Container for \code{featureScores()} output.}
 \description{
@@ -40,6 +41,10 @@
     \item{}{
 	\code{x[i]}
 	Creates a ScoresList object, keeping only the \code{i} matrices.
+    }
+    \item{}{
+	\code{subsetRows(x, i)}
+	Creates a ScoresList object, keeping only the \code{i} features.
     }
   }
 }
