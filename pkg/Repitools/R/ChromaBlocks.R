@@ -13,6 +13,7 @@ setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.in
     }
     
     .callRegions <- function(bins, RPKM=NULL, cutoffs, blockWidth, ipWidth, minBlocks) {
+        require(Ringo)
         callCutoff <- function(dat, cutoff) {
             dat$cutoff <- Ringo::sliding.meansd(dat$position, as.integer(dat$RPKM>=cutoff), ipWidth*blockWidth/2)[,"mean"]>=minBlocks/blockWidth
             temp <- dat$mean>cutoff&dat$cutoff
