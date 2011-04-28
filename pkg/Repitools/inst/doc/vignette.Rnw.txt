@@ -22,9 +22,9 @@
 
 \begin{document}
 \SweaveOpts{engine=R}
-%\VignetteIndexEntry{Examples of Common Tasks With Sequencing Data}
+%\VignetteIndexEntry{Using Repitools for Epigenomic Sequencing Data}
 
-\title{Performing Some Basic Quality Checking and Analysis on Sequencing Data with \texttt{Repitools}}
+\title{Integrative Analysis of Epigenomic sequencing (and microarray) data with \texttt{Repitools}}
 \date{}
 \maketitle
 \begin{center}
@@ -38,9 +38,10 @@ options(prompt = " ", continue = " ")
 set.seed(4)
 @
 
-\texttt{Repitools} is a package that allows statistics of absolute or differential binding for ChIP-seq and MeDIP-seq to be calculated, as well as summaries of genome-wide trends to be visualised in a variety of formats. Some basic quality checking utilities are also available for sequencing data. Most of the functionality available is implemented for both microarrays and next generation sequencing, with very similar function calls for both types of data.
+\texttt{Repitools} is a package that allows exploratory as well as targeted statistical analysis of absolute and differential binding for ChIP-seq and MeDIP-seq, giving visual summaries in a variety of formats. Some basic quality checking utilities are available for sequencing data. Much of the functionality available is implemented for both microarrays and sequencing data, with very similar function calls for both types of data.
+
 \\ \\
-In this vignette, quality checks of the sequencing data, followed by analysis and visualisation will be demonstrated. Further description of the package can be found in the associated Bioinformatics Applications Note \footnote{\href{http://bioinformatics.oxfordjournals.org/content/26/13/1662.abstract}{Repitools: an R package for the analysis of enrichment-based epigenomic data}}
+In this vignette, we highlight various features within the package.  Further description of the package can be found in the associated Bioinformatics Applications Note\footnote{\href{http://bioinformatics.oxfordjournals.org/content/26/13/1662.abstract}{Repitools: an R package for the analysis of enrichment-based epigenomic data}} as well as in the \textbf{R} help documents.
 \\ \\
 To start with, load the \texttt{Repitools} package.
 
@@ -49,7 +50,9 @@ library(Repitools)
 @
 
 \section{Example Datasets}
-A \texttt{GRangesList} of mapped short reads from an Illumina Genome Analyser run of four samples is included with the package. This data has been published and is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE24546}{here}. LNCaP is the cancer cell line, and PrEC is the normal cell line. \texttt{GRanges} objects of mapped files from many popular aligners can be created by first reading them into \textbf{R} with the \texttt{readAligned} function in the \texttt{ShortRead} package, then coerced with \texttt{as(alnRdObj, "GRanges")}. The two convenience methods \texttt{BAM2GRanges} and \texttt{BAM2GRangesList} in \texttt{Repitools} could also be used, if the reads were stored on disk in BAM format. By default, these two methods read in only the uniquely-mapping reads. See the \texttt{ShortRead} package documentation for ideas about how to read other sequencing data into \textbf{R}.
+A small \texttt{GRangesList} of mapped short reads (four samples run on an Illumina Genome Analyser) is included with the package (for example, see \texttt{?binPlots}). This data has been published and is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE24546}{here}. LNCaP is the cancer cell line, and PrEC is the normal cell line.  Here, the "IP" represents an MBD capture experiment, whereby a population of DNA fragments containing methylated DNA (generally in the CpG context) and "input" represents fragmented genomic DNA from the same cell lines. \\
+
+Note that \texttt{GRanges} objects of mapped reads from many popular aligners can be created by first reading them into \textbf{R} with the \texttt{readAligned} function in the \texttt{ShortRead} package, then coerced with \texttt{as(alnRdObj, "GRanges")}. The two convenience methods \texttt{BAM2GRanges} and \texttt{BAM2GRangesList} in \texttt{Repitools} could also be used, if the reads were stored on disk in BAM format (requires the \texttt{Rsamtools} package). By default, these two methods read in only the uniquely-mapping reads. See the \texttt{ShortRead} package documentation for ideas about how to read other sequencing data into \texttt{GRanges} or \texttt{GRangesList} objects.
 
 <<label=loadAndShow>>=
 library(GenomicRanges)
@@ -57,16 +60,17 @@ load("samplesList.RData")
 class(samples.list)
 names(samples.list)
 elementLengths(samples.list)
+samples.list[[1]]
 @
 
-Also, an annotation of genes will be used. The annotation is based on one provided from Affymetrix with their expression arrays \footnote{\href{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}}. This is to be able to relate the sequencing data gene expression measurements done on an array.
+Also, an annotation of genes will be used. The annotation is based on one provided from Affymetrix for their Gene 1.0 ST expression arrays\footnote{\href{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}{http://www.affymetrix.com/Auth/analysis/downloads/na27/wtgene/HuGene-1\_0-st-v1.na27.hg18.transcript.csv.zip}}. We will relate the epigenomic sequencing data to the Affymetrix gene expression measurements.
  
 <<label=readAnno>>=
 gene.anno <- read.csv("geneAnno.csv", stringsAsFactors = FALSE)
 head(gene.anno)
 @
 
-\noindent Lastly, there is matrix of gene expression changes, with each element related to the corresponding row in the gene annotation table. These values are the t-statistics of background corrected and RMA normalised Affymetrix expression array experiments. The unprocessed array data is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19726}{here}.
+\noindent Lastly, there is matrix of gene expression changes, with each element related to the corresponding row in the gene annotation table. These values are moderated t-statistics (see the \texttt{limma} package) of background corrected and RMA normalised Affymetrix expression array experiments. The unprocessed array data is available \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19726}{here}.
 
 <<label=loadExpr>>=
 load("expr.RData")
@@ -74,7 +78,9 @@ head(expr)
 @
 
 \section{Quality Checking}
-Notice that two of the samples are MBD2 IPs, and two are inputs. Therefore, the IP samples should differ to the inputs in two ways. Firstly, they should be more CpG rich, since DNA methylation rarely ever occurs outside of this sequence context. Also, since DNA methylation tends to occur in peaks, rather than spread out regions, a higher frequency of bases should have high coverage of reads in the IP samples than in input samples. The \texttt{enrichmentPlot} and \texttt{cpgDensityPlot} functions allow examination of this.
+As mentioned, two of the samples are MBD2 IPs, and two are inputs. Therefore, the IP samples should differ to the inputs in at least two ways. Firstly, they should be more CpG rich, since we are enriching for methylated DNA (and DNA methylation rarely occurs outside of this sequence context). Secondly, DNA methylation tends to occur in peaks since CpG sites are often present in CpG-rich regions (e.g. CpG islands).  Conversely, the input samples should be relatively uniform genome-wide (besides the usual mappability and GC content biases).\\
+
+We can visualize the normalized coverage (log) frequencies for several samples using \texttt{enrichmentPlot}.  And, we can calculate the CpG density of reads (or reads extended to a certain fragment size) using \texttt{cpgDensityPlot}, as below.
 
 <<label=enrPlot, fig=TRUE>>=
 seqinfo(samples.list)
