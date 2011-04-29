@@ -32,6 +32,9 @@ setMethod(".featureScores", c("GRanges", ".CoverageSamples"),
     cvg.mat <- matrix(countOverlaps(cvg.samps, x) / length(x),
                       ncol = length(pos.labels),
                       byrow = TRUE)
+
+    # Precision sometimes means 0 is represented as very small negative numbers.
+    cvg.mat[cvg.mat < 0] = 0
     	
     colnames(cvg.mat) <- pos.labels
     rownames(cvg.mat) <- .getNames(anno)

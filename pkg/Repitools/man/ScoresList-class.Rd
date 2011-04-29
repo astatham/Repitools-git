@@ -9,6 +9,7 @@
 \alias{length,ScoresList-method}
 \alias{show,ScoresList-method}
 \alias{[,ScoresList-method}
+\alias{subsetRows}
 \alias{subsetRows,ScoresList-method}
 
 \title{Container for \code{featureScores()} output.}

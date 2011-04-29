@@ -6,6 +6,7 @@
 \alias{show,ClusteredCoverageList-method}
 \alias{[,ClusteredCoverageList-method}
 \alias{subsetRows,ClusteredCoverageList-method}
+\alias{clusters}
 \alias{clusters,ClusteredCoverageList-method}
 
 \title{Container for coverage matrices with clustering results.}

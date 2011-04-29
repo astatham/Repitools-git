@@ -38,14 +38,14 @@ setMethod("profilePlots", "GRangesList", function(x, anno, design=NULL, up=7500,
 	}
 	annoTable <- matrix(1:nrow(annoCounts), byrow=TRUE, ncol=length(blockPos), nrow=nrow(anno), dimnames=list(NULL, blockPos))
 	if (verbose) cat("made annoTable\n")
-	profilePlots(annoCounts, annoTable, removeZeros=FALSE, useMean=TRUE, ...)
+	profilePlots(annoCounts, annoTable, remove.zeros=FALSE, use.mean=TRUE, ...)
 })
 
-setMethod("profilePlots", "AffymetrixCelSet", function(x, probeMap=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2adjust=TRUE, verbose=FALSE, ...) {
+setMethod("profilePlots", "AffymetrixCelSet", function(x, probe.map=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2.adj=TRUE, verbose=FALSE, ...) {
         require(aroma.affymetrix)
 			
-	if (is.null(probeMap)) {
-		if (is.null(anno)) stop("Either probeMap or anno must be supplied!")
+	if (is.null(probe.map)) {
+		if (is.null(anno)) stop("Either probe.map or anno must be supplied!")
 		probePositions <- getProbePositionsDf( getCdf(x), verbose=verbose )
 		anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
 		rownames(anno) <- anno$name
@@ -58,49 +58,49 @@ setMethod("profilePlots", "AffymetrixCelSet", function(x, probeMap=NULL, anno=NU
 		lookupT <- makeWindowLookupTable(annot$indexes, annot$offsets,
 				starts = seq(-up-bw, down-bw, by), ends = seq(-up+bw, down+bw, by))
 	} else {
-		if (verbose) cat("Using supplied probeMap\n")
-		probePositions <- probeMap$probePositions
-		lookupT <- probeMap$lookupT
+		if (verbose) cat("Using supplied probe.map\n")
+		probePositions <- probe.map$probePositions
+		lookupT <- probe.map$lookupT
 	}
 	
 	dmM <- extractMatrix(x, cells = probePositions$index, verbose = verbose)
-	if (log2adjust) dmM <- log2(dmM)
+	if (log2.adj) dmM <- log2(dmM)
 	
 	profilePlots(dmM, lookupT, ...)
 	invisible(list(lookupT=lookupT, probePositions=probePositions))
 })
 
 
-setMethod("profilePlots", "matrix", function(x, lookupTable, geneList, titles=colnames(x), nSamples=1000, confidence=0.975, legend.plot="topleft", cols=rainbow(length(geneList)), removeZeros=TRUE, useMean=FALSE, ...) {
-	#Test geneList for sanity
-	for (i in 1:length(geneList)) if (class(geneList[[i]])=="logical") {
-		if (length(geneList[[i]])!=nrow(lookupTable)) 
-		  stop("boolean geneList element length must equal num of rows in lookupTable")
-	} else if (class(geneList[[i]])=="integer") {
-		if(max(geneList[[i]])>nrow(lookupTable)) 
-		  stop("geneList element value greater than num of rows in lookupTable") 
-	} else stop("geneList elements must a be boolean or integer vector")
+setMethod("profilePlots", "matrix", function(x, lookup.table, gene.list, titles=colnames(x), n.samples=1000, confidence=0.975, legend.plot="topleft", cols=rainbow(length(gene.list)), remove.zeros=TRUE, use.mean=FALSE, ...) {
+	#Test gene.list for sanity
+	for (i in 1:length(gene.list)) if (class(gene.list[[i]])=="logical") {
+		if (length(gene.list[[i]])!=nrow(lookup.table)) 
+		  stop("boolean gene.list element length must equal num of rows in lookup.table")
+	} else if (class(gene.list[[i]])=="integer") {
+		if(max(gene.list[[i]])>nrow(lookup.table)) 
+		  stop("gene.list element value greater than num of rows in lookup.table") 
+	} else stop("gene.list elements must a be boolean or integer vector")
 	stopifnot(confidence>0.5, confidence<1)
 	if (length(legend.plot)!=ncol(x)) if (length(legend.plot)!=1) stop("legend.plot must be either same length as columns in x or 1") else legend.plot <- rep(legend.plot, ncol(x))
-	x.p <- as.numeric(colnames(lookupTable))
+	x.p <- as.numeric(colnames(lookup.table))
 	#grab Intensities for all genes
-	geneList.max <- which.max(sapply(geneList, FUN=function(u) if(class(u)=="logical") sum(u) else length(u)))
+	gene.list.max <- which.max(sapply(gene.list, FUN=function(u) if(class(u)=="logical") sum(u) else length(u)))
 	for (i in 1:ncol(x)) {
-		sMat <- .scoreIntensity(lookupTable, x[,i], removeZeros=removeZeros, returnMatrix=TRUE, useMean=useMean)
-		sMat.geneList <- lapply(geneList, FUN=function(u) sMat[u, ])
-		if (useMean) trace.geneList <- sapply(sMat.geneList, FUN=function(u) apply(u, 2, mean, na.rm=TRUE)) else
-		trace.geneList <- sapply(sMat.geneList, FUN=function(u) apply(u, 2, median, na.rm=TRUE))
+		sMat <- .scoreIntensity(lookup.table, x[,i], removeZeros=remove.zeros, returnMatrix=TRUE, useMean=use.mean)
+		sMat.gene.list <- lapply(gene.list, FUN=function(u) sMat[u, ])
+		if (use.mean) trace.gene.list <- sapply(sMat.gene.list, FUN=function(u) apply(u, 2, mean, na.rm=TRUE)) else
+		trace.gene.list <- sapply(sMat.gene.list, FUN=function(u) apply(u, 2, median, na.rm=TRUE))
 
-		#choose nSamples random genelists
-		inds <- lapply(seq_len(nSamples), FUN=function(u) sample(nrow(sMat), nrow(sMat.geneList[[geneList.max]])))
-		if (useMean) meds <- sapply(inds, FUN=function(u) apply(sMat[u,], 2, mean, na.rm=TRUE)) else
+		#choose n.samples random genelists
+		inds <- lapply(seq_len(n.samples), FUN=function(u) sample(nrow(sMat), nrow(sMat.gene.list[[gene.list.max]])))
+		if (use.mean) meds <- sapply(inds, FUN=function(u) apply(sMat[u,], 2, mean, na.rm=TRUE)) else
 		meds <- sapply(inds, FUN=function(u) apply(sMat[u,], 2, median, na.rm=TRUE))
 		meds.conf <- apply(meds, 1, quantile, p=c(1-confidence, 0.5, confidence))
 	
 		#plot tiem
-		matplot(x.p, cbind(t(meds.conf), trace.geneList), type="n", lty=c(2,1,2,1), lwd=c(1,3,1,3), xlab="Position relative to TSS", ylab="Signal", main=titles[i], ...)
+		matplot(x.p, cbind(t(meds.conf), trace.gene.list), type="n", lty=c(2,1,2,1), lwd=c(1,3,1,3), xlab="Position relative to TSS", ylab="Signal", main=titles[i], ...)
 		polygon(x=c(x.p, rev(x.p)), y=c(meds.conf[1,], rev(meds.conf[3,])), col="lightblue")
-		matplot(x.p, cbind(t(meds.conf), trace.geneList), type="l", lty=c(2,1,2,rep(1, length(geneList))), lwd=c(1,3,1,rep(3, length(geneList))), add=TRUE, col=c("blue","blue","blue",cols))
-		if (!is.na(legend.plot[i])) legend(legend.plot[i], legend=names(geneList), col=cols, lwd=3)
+		matplot(x.p, cbind(t(meds.conf), trace.gene.list), type="l", lty=c(2,1,2,rep(1, length(gene.list))), lwd=c(1,3,1,rep(3, length(gene.list))), add=TRUE, col=c("blue","blue","blue",cols))
+		if (!is.na(legend.plot[i])) legend(legend.plot[i], legend=names(gene.list), col=cols, lwd=3)
 	}
 })

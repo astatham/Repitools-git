@@ -1,14 +1,6 @@
 require("Repitools")
 require("BSgenome.Hsapiens.UCSC.hg18")
-require("chipseq")
 options(warn = -1)
-
-pathToData <- system.file("exampleData", package = "RepitoolsExamples")
-
-if(pathToData == "")
-{
-	cat("Running minimal tests on functions that don't need datafiles.\n")
-}
 
 probes <- data.frame(chr = c("chr1", "chr9", "chrY", "chr1", "chr21", "chr6", "chr6", "chr2", "chrX", "chr11"), position = c(10000, 5500, 100000, 11000, 20000000, 500100, 499900, 700000, 9900, 90000), strand = c('+', '+', '+', '+', '-', '-', '-', '+', '-', '+'), stringsAsFactors = FALSE)
 genes <- data.frame(chr = c("chr1", "chr9", "chr11", "chr1", "chr11", "chr6", "chr6", "chr22", "chrY", "chr21"), start = c(10000, 7900, 950000, 10500, 74000000, 450000, 5000000, 44000000, 1500, 9800000), end = c(12500, 9500, 1000000, 14500, 75000000, 500000, 9000000, 45000000, 3000, 10000000), strand = c('+', '-', '-', '+', '-', '-', '-', '+', '+', '-'), name = paste("Gene", 1:10), stringsAsFactors = FALSE)
@@ -68,53 +60,4 @@ correctPlaces <- list(-62, 181, NULL, c(-140, -98), 231, c(-219, -146, -88, -12,
 if(!isTRUE(all.equal(findsPlaces, correctPlaces)))
     stop("Error in sequenceCalc function positions task")
 cat("sequenceCalc tested fine.\n")
-
-if(pathToData != "") # Do tests involving CDFs, CELs, sequences.
-{
-    require("aroma.affymetrix")
-    require("RepitoolsExamples")
-    require("edgeR")
-    userWd <- getwd()
-    setwd(pathToData)
-
-    cdfFile <- AffymetrixCdfFile$byChipType("Hs_PromPR_v02")
-    cdfUnique <- getUniqueCdf(cdfFile)
-    celSet <- AffymetrixCelSet$byName("Tiling", cdf = cdfFile)
-    MATNormalise <- MatNormalization(celSet)
-    celSetNorm <- process(MATNormalise)
-    celSetNormUniq <- convertToUnique(celSetNorm)
-    experimentNames <- getNames(celSetNormUniq)
-    anno <- read.csv(paste("annotationData", "humanGenomeAnnotation.csv", sep = .Platform$file.sep))
-    designMatrix <- matrix(c(-1, 1, 1, -1), ncol = 1, dimnames = list(experimentNames, c("K9Ac I.P. - Input")))
-    results <- blocksStats(celSetNormUniq, anno, chrs = paste("chr", c(1:22, 'X', 'Y', 'M'), sep = ''), design = designMatrix, up = 2000, down = 0)
-
-    GSTP1row <- grep("GSTP1", results$symbol)
-    KLK2row <- grep("KLK2", results$symbol)
-    if(results[GSTP1row, "start"] != 67107856 || results[GSTP1row, "end"] != 67110699 || results[GSTP1row, "df.2000.0"] != 11 || round(results[GSTP1row, "p.vals.K9Ac.I.P....Input"], 3) != 0.744 || results[KLK2row, "start"] != 56068500 || results[KLK2row, "end"] != 56075635 || results[KLK2row, "df.2000.0"] != 35 || round(results[KLK2row, "p.vals.K9Ac.I.P....Input"], 3) != 0)
-	stop("blocksStats giving unexpected results for acetylation arrays.")
-	
-    load(paste("rawData", "sequencing", "seq_data.Rdata", sep = .Platform$file.sep))
-    rs <- GDL2GRL(rs)
-    results <- annotationCounts(rs, anno, 1000, 1000, seq.len = 300)
-    if(!all(results[100,]==c(8,6,1,4)) || !all(results[5000,]==c(0,0,50,52)))
-        stop("annotationCounts giving unexpected results.")
-
-    results <- blocksStats(rs, anno, design = cbind(test=c(1,1,-1,-1)), up = 1000, down = 1000, seq.len = 300)
-    if (!all(round(results$logFC_test[5000:5010],3)==c(-32.974,-0.701,-1.444,0.304,0.113,1.181,0.786,-1.025,-2.327,-0.018,-0.086)))
-        stop("blocksStats giving unexpected results for sequence data.")
-
-    units <- indexOf(cdfFile, "chrY")
-    indices <- getCellIndices(cdfUnique, units = units, stratifyBy = "pm", unlist = TRUE, useNames = FALSE)
-
-    # Set random number seed so results will be the same in every test.
-    set.seed(27)
-    results <- regionStats(celSetNormUniq, designMatrix, ind = indices, probeWindow = 500, nPermutations = 10)$regions[[1]]
-    best <- which(abs(results$score) == max(abs(results$score)))
-
-    if(results[best, "start"] != 11829591 || results[best, "end"] != 11830892)
-        stop("Error in regionStats function")
-
-    cat("regionStats tested fine.\n")
-    setwd(userWd)
-}
 cat("All tests passed.\n")

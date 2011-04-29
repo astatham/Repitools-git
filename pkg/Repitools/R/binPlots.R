@@ -2,12 +2,12 @@ setOldClass("AffymetrixCelSet")
 
 setGeneric("binPlots", signature = "x", function(x, ...){standardGeneric("binPlots")})
 
-setMethod("binPlots", "GRangesList", function(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, libSize="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...) {
+setMethod("binPlots", "GRangesList", function(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, lib.size="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...) {
         require(GenomicRanges)
 
 	anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
 	rownames(anno) <- anno$name
-	if(libSize == "ref" && is.null(Acutoff))
+	if(lib.size == "ref" && is.null(Acutoff))
 		stop("Must give value of Acutoff if using \"ref\" normalisation.\n")
 	blockPos <- seq.int(-up, down, by)
 	if (verbose) cat("made blockPos\n")
@@ -28,11 +28,11 @@ setMethod("binPlots", "GRangesList", function(x, anno, design=NULL, up=7500, dow
 	annoCounts <- annotationBlocksCounts(x[inUse], annoBlocks, seq.len, verbose)
 
 	totalReads <- elementLengths(x[inUse])
-	if (libSize == "ref") {
+	if (lib.size == "ref") {
 		if (verbose) cat("normalising to reference sample\n")
 		annoCounts <- t(t(annoCounts) * calcNormFactors(annoCounts, Acutoff = Acutoff) * totalReads)
 		
-	} else { # libSize = "lane"
+	} else { # lib.size = "lane"
 		if (verbose) cat("normalising to total library sizes\n")
 		annoCounts <- t(t(annoCounts)/totalReads)*1000000	
 	}
@@ -49,12 +49,12 @@ setMethod("binPlots", "GRangesList", function(x, anno, design=NULL, up=7500, dow
 	}
 	annoTable <- matrix(1:nrow(annoCounts), byrow=TRUE, ncol=length(blockPos), nrow=nrow(anno), dimnames=list(NULL, blockPos))
 	if (verbose) cat("made annoTable\n")
-	binPlots(annoCounts, annoTable, removeZeros=FALSE, useMean=TRUE, ...)
+	binPlots(annoCounts, annoTable, remove.zeros=FALSE, use.mean=TRUE, ...)
 })
 
-setMethod("binPlots", "AffymetrixCelSet", function(x, probeMap=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2adjust=TRUE, verbose=FALSE, ...) {			
-	if (is.null(probeMap)) {
-		if (is.null(anno)) stop("Either probeMap or anno must be supplied!")
+setMethod("binPlots", "AffymetrixCelSet", function(x, probe.map=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2.adj=TRUE, verbose=FALSE, ...) {			
+	if (is.null(probe.map)) {
+		if (is.null(anno)) stop("Either probe.map or anno must be supplied!")
 		probePositions <- getProbePositionsDf( getCdf(x), verbose=verbose )
 		anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
 		rownames(anno) <- anno$name
@@ -67,22 +67,22 @@ setMethod("binPlots", "AffymetrixCelSet", function(x, probeMap=NULL, anno=NULL, 
 		lookupT <- makeWindowLookupTable(annot$indexes, annot$offsets,
 				starts = seq(-up-bw, down-bw, by), ends = seq(-up+bw, down+bw, by))
 	} else {
-		if (verbose) cat("Using supplied probeMap\n")
-		probePositions <- probeMap$probePositions
-		lookupT <- probeMap$lookupT
+		if (verbose) cat("Using supplied probe.map\n")
+		probePositions <- probe.map$probePositions
+		lookupT <- probe.map$lookupT
 	}
 	
 	dmM <- extractMatrix(x, cells = probePositions$index, verbose = verbose)
-	if (log2adjust) dmM <- log2(dmM)
+	if (log2.adj) dmM <- log2(dmM)
 
 	binPlots(dmM, lookupT, ...)
 	invisible(list(lookupT=lookupT, probePositions=probePositions))
 })
 
 
-setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plotType=c("line","heatmap","terrain","boxplot"), nbins=10, cols=NULL, lwd=3, lty=1, sameScale=TRUE, symmScale=FALSE, verbose=FALSE, removeZeros=TRUE, useMean=FALSE, ...) {
+setMethod("binPlots", "matrix", function(x, lookup.table, ordering, ord.label, plot.type=c("line","heatmap","terrain","boxplot"), nbins=10, cols=NULL, lwd=3, lty=1, same.scale=TRUE, symm.scale=FALSE, verbose=FALSE, remove.zeros=TRUE, use.mean=FALSE, ...) {
   def.par <- par(no.readonly = TRUE) # save default, for resetting...
-  plotType <- match.arg(plotType)
+  plot.type <- match.arg(plot.type)
   if(!ncol(ordering) == ncol(x)) {
     if (!ncol(ordering) == 1)
       stop("ordering must have either 1 column or the same number of columns as dataMatrix.")
@@ -91,7 +91,7 @@ setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plo
 
   if( is.null(cols) ) {
     require(gplots)
-	if(plotType=="line") {
+	if(plot.type=="line") {
 	  cols <- colorpanel(nbins,"blue","green","red")
 	} else {
 	  cols <- colorpanel(64,"blue","white","red")
@@ -118,16 +118,16 @@ setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plo
   }
   
   breaks <- apply(ordering, 2, .makeBins)
-  if( plotType %in% c("line","heatmap","terrain")) {
-    intensScores <- array(NA,dim=c(ncol(x), ncol(lookupTable), nbins),
-	                      dimnames=list(colnames(x),colnames(lookupTable),NULL))
+  if( plot.type %in% c("line","heatmap","terrain")) {
+    intensScores <- array(NA,dim=c(ncol(x), ncol(lookup.table), nbins),
+	                      dimnames=list(colnames(x),colnames(lookup.table),NULL))
   } else {
     intensScores <- vector("list",ncol(x))
 	for(i in 1:length(intensScores))
 		intensScores[[i]] <- vector("list", length(levels(breaks[[orderingIndex[i]]][["intervals"]])))
   }
   
-  xval <- as.numeric(colnames(lookupTable))
+  xval <- as.numeric(colnames(lookup.table))
 
   for(i in 1:ncol(x)) {
 	if (verbose) cat(colnames(ordering)[orderingIndex[i]],": ",sep="")
@@ -136,26 +136,26 @@ setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plo
 	
 	for(j in 1:length(cutLevels)){
 		level <- cutLevels[j]
-	    lookupTableSubset <- lookupTable[breaks[[orderingIndex[i]]][["intervals"]]==level, ]
-	  if( plotType %in% c("line","heatmap","terrain")) {
-	    intensScores[i,,j] <- .scoreIntensity(lookupTableSubset, intensities=x[,i], minProbes=2, removeZeros=removeZeros, useMean=useMean)	
+	    lookup.tableSubset <- lookup.table[breaks[[orderingIndex[i]]][["intervals"]]==level, ]
+	  if( plot.type %in% c("line","heatmap","terrain")) {
+	    intensScores[i,,j] <- .scoreIntensity(lookup.tableSubset, intensities=x[,i], minProbes=2, removeZeros=remove.zeros, useMean=use.mean)	
       } else {
-		d <- .scoreIntensity(lookupTableSubset, intensities=x[,i], minProbes=2, returnMatrix=TRUE, removeZeros=removeZeros, useMean=useMean)
+		d <- .scoreIntensity(lookup.tableSubset, intensities=x[,i], minProbes=2, returnMatrix=TRUE, removeZeros=remove.zeros, useMean=use.mean)
 		intensScores[[i]][[j]] <- boxplot(as.data.frame(d), plot=FALSE)
 	  }
 	}
   }
 
-    if ( plotType %in% c("line","heatmap","terrain")) if (sameScale) {
+    if ( plot.type %in% c("line","heatmap","terrain")) if (same.scale) {
       rng <- range(intensScores, na.rm=TRUE)
-      if (symmScale) rng <- c(-max(abs(rng)),max(abs(rng)))
+      if (symm.scale) rng <- c(-max(abs(rng)),max(abs(rng)))
     }
 
   for(i in 1:ncol(x)) {
   cutLevels <- levels( breaks[[orderingIndex[i]]][["intervals"]] )
 
 	  
-  if(plotType=="boxplot") {
+  if(plot.type=="boxplot") {
 	iS <- intensScores[[i]]
 	n <- length(iS)
 	df <- diff(xval)[1]
@@ -166,13 +166,13 @@ setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plo
 	}
   } else {
 	dm <- intensScores[i,,]
-        if (!sameScale) {
+        if (!same.scale) {
           rng <- range(dm, na.rm=TRUE)
-          if (symmScale) rng <- c(-max(abs(rng)),max(abs(rng)))
+          if (symm.scale) rng <- c(-max(abs(rng)),max(abs(rng)))
         }
 
 	titName <- paste("Signal:", colnames(x)[i], label[orderingIndex[i]], colnames(ordering)[orderingIndex[i]], sep="")
-	if(plotType=="line")
+	if(plot.type=="line")
 	{
 		  layout(rbind(c(1, 2)), widths=c(3,2))
 		  par(oma = c(0, 0, 2, 0))
@@ -180,12 +180,12 @@ setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plo
 		  matplot(xval,dm,type="l",col=cols,lty=lty,lwd=lwd,xlab="Position relative to TSS",ylab="Signal",ylim=rng)
 		  par(mai=c(1.02,0.05,0.82,0))
 		  plot.new()
-		  legend(x="top", title = ordLabel, col=cols, lty = 1, legend=cutLevels)
+		  legend(x="top", title = ord.label, col=cols, lty = 1, legend=cutLevels)
 		  if (verbose) print(cols)
 		  intervals <- breaks[[orderingIndex[i]]][["intervals"]]
 		  if (verbose) print(intervals)
 		  mtext(titName, line = 0.5, outer = TRUE)
-	} else if(plotType=="heatmap") {
+	} else if(plot.type=="heatmap") {
 		  layout(rbind(c(1,2,3)), widths=c(1,3,1))
 		  par(mai=c(1.02,0.50,0.82,0.05))
 		  par(oma = c(0, 0, 0, 0))
@@ -195,17 +195,17 @@ setMethod("binPlots", "matrix", function(x, lookupTable, ordering, ordLabel, plo
 		  image(xval,1:nbins,dm,xlab="Position relative to TSS", yaxt="n", ylab="Bin",col=cols,zlim=rng)
 		  par(mai=c(1.02,0.05,0.82,0.50))
 		  breakpoints <- breaks[[orderingIndex[i]]][["breakpoints"]]
-		  plot(x=breakpoints,y=0:nbins, type="l", yaxt="n", lwd=3, xlab=ordLabel, yaxs="i")
+		  plot(x=breakpoints,y=0:nbins, type="l", yaxt="n", lwd=3, xlab=ord.label, yaxs="i")
 		  par(oma = c(0, 0, 2, 0))
 		  mtext(titName, line = 0, outer = TRUE)
-		} else if(plotType=="terrain") {
+		} else if(plot.type=="terrain") {
 		  layout(1)
 		  par(oma = c(0, 0, 2, 0))
   		  dm.avg <- (dm[-1, -1] + dm[-1, -(ncol(dm) - 1)] +
              		dm[-(nrow(dm) -1), -1] + dm[-(nrow(dm) -1), -(ncol(dm) - 1)]) / 4
 
   		  this.cols = cols[cut(dm.avg, breaks = seq(rng[1], rng[2], length.out=length(cols)), include.lowest = T)] 
-		  persp(xval, 1:nbins, dm, xlab="Position relative to TSS", yaxt="n", ylab=ordLabel, col=this.cols, zlim=rng, theta=-25, phi=20, d=1.5, border=NA, ticktype="detailed", zlab="Signal")
+		  persp(xval, 1:nbins, dm, xlab="Position relative to TSS", yaxt="n", ylab=ord.label, col=this.cols, zlim=rng, theta=-25, phi=20, d=1.5, border=NA, ticktype="detailed", zlab="Signal")
 		  mtext(titName, line = 0, outer = TRUE)
 		}
 
