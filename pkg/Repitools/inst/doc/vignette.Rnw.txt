@@ -193,7 +193,7 @@ Sets of genes (e.g. genes disrupted in a certain type of cancer, or differential
 <<label = signifPlots, fig = TRUE, width = 8>>=
 which.loss <- which(expr < -3)
 profilePlots(samples.list, anno = gene.anno, up = 7500, down = 2500,
-             geneList = list(`Downregulated Genes` = which.loss),
+             gene.list = list(`Downregulated Genes` = which.loss),
              design = design.matrix, by = 500, bw = 500,
              seq.len = 300)
 @

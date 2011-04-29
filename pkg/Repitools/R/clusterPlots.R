@@ -187,9 +187,9 @@ setMethod("clusterPlots", "ClusteredCoverageList",
         plot.ranges <- lapply(ranges, function(x)
                                       {
                                          if(symm.scale)
-                                             c(-max(abs(x)), max(abs(x)))
+                                             c(-1,1)*max(abs(x))
                                          else
-                                             c(min(x), max(x))
+                                             range(x)
                                       })
 	
         par(oma = c(1, 1, 3, 1))
@@ -233,9 +233,10 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	}, cvgs, names(c.list), plot.ranges)
 
         cl.midpts <- bounds - cl.sizes / 2
-        plot(rep(1, n.clusters), cl.midpts, pch = cl.levels[rev(cl.ord)], cex = 2,
-             ylim = c(0, bounds[length(bounds)]), yaxs = 'i', xlab = "", main = "ID",
-             axes = FALSE)
+        plot.new()
+        plot.window(xlim = c(0, 2), ylim = c(0, bounds[length(bounds)]), xaxs = 'i', yaxs = 'i')
+        text(rep(1, n.clusters), cl.midpts, labels = cl.levels[rev(cl.ord)], cex = 2)
+        mtext("ID", line = 3)
 
 	par(mai = c(1.02, 0.05, 0.82, 0.50))
         if(!is.null(expr))
@@ -273,16 +274,16 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
                matrices or expression data.\n")
 
     cvgs <- lapply(cvgs, scale)
-    if(cap.type == "all") max.cvg <- quantile(do.call(cbind, cvgs), cap.q)
+    if(cap.type == "all") max.cvg <- quantile(abs(do.call(cbind, cvgs)), cap.q)
 
     # Find the maximum score allowable, then make any scores bigger be the
     # maximum score.
     cvgs <- lapply(cvgs, function(x)
     {
-	if(cap.type == "sep") max.cvg <- quantile(x, cap.q)
-	x[x > max.cvg] = max.cvg
-        x <- x / max.cvg
-	return(x)
+	    if(cap.type == "sep") max.cvg <- quantile(abs(x), cap.q)
+	    x[x > max.cvg] = max.cvg
+	    x[x < -max.cvg] = -max.cvg
+      x / max.cvg
     })
 
     # Do the k-means clustering for all marks together.
