@@ -80,7 +80,7 @@ setMethod("binPlots", "AffymetrixCelSet", function(x, probe.map=NULL, anno=NULL,
 })
 
 
-setMethod("binPlots", "matrix", function(x, lookup.table, ordering, ord.label, plot.type=c("line","heatmap","terrain","boxplot"), nbins=10, cols=NULL, lwd=3, lty=1, same.scale=TRUE, symm.scale=FALSE, verbose=FALSE, remove.zeros=TRUE, use.mean=FALSE, ...) {
+setMethod("binPlots", "matrix", function(x, lookup.table, ordering, ord.label="", plot.type=c("line","heatmap","terrain","boxplot"), nbins=10, cols=NULL, lwd=3, lty=1, same.scale=TRUE, symm.scale=FALSE, verbose=FALSE, remove.zeros=TRUE, use.mean=FALSE, ...) {
   def.par <- par(no.readonly = TRUE) # save default, for resetting...
   plot.type <- match.arg(plot.type)
   if(!ncol(ordering) == ncol(x)) {

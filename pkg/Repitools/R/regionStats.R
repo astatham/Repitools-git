@@ -20,30 +20,30 @@ setGeneric("regionStats", function(x, design, ...){standardGeneric("regionStats"
   for(col in 1:ncol(diffs)) {
   
     if( verbose )
-	    cat("Calculating trimmed means for column", col, "of design matrix:\n")
+	    message("Calculating trimmed means for column", col, "of design matrix:\n")
       
     for(ii in 1:length(uch)) {
       if( verbose )
-	      cat(" ", uch[ii], "-", sep="")
+	      message(" ", uch[ii], "-", sep="")
 	    w <- which(ch == uch[ii])
 	  
 	    tmeanReal[w,col] <- gsmoothr::tmeanC(sp[w], diffs[w,col], probeWindow=probeWindow, 
                                            trim=meanTrim, nProbes=nProbes)
   	    if( verbose )
-	        cat("R")
+	        message("R")
 	    for(j in 1:ncol(tmeanPerms[[col]])) {
 	      s <- sample(1:nrow(tmeanReal))
 	      tmeanPerms[[col]][w,j] <- gsmoothr::tmeanC(sp[w], diffs[s,col][w], probeWindow=probeWindow, 
                                                    trim=meanTrim, nProbes=nProbes)
 		    if( verbose )
-	        cat(".")
+	        message(".")
 
 	    }
 	  }
 
 
     if( verbose )
-      cat("\nCalculating FDR table.\n")
+      message("\nCalculating FDR table.\n")
 	  mx <- max(abs(tmeanPerms[[col]]),na.rm=TRUE)
 
 
@@ -60,7 +60,7 @@ setGeneric("regionStats", function(x, design, ...){standardGeneric("regionStats"
 	  cut <- min( fdrTabs[[col]]$cut[w], na.rm=TRUE )
 	
     if( verbose )
-      cat("Using cutoff of", cut, "for FDR of", fdrLevel,"\n")
+      message("Using cutoff of", cut, "for FDR of", fdrLevel,"\n")
 	  
 	  regions[[col]] <- .getBed(tmeanReal[,col], ch, sp, cut, nProbes, maxGap, twoSides)
 	
@@ -108,7 +108,7 @@ setMethod("regionStats","AffymetrixCelSet", function(x, design, fdrLevel=0.05, n
 
   w <- rowSums( is.na(diffs) )==0
   if( verbose )
-    cat("Removing", sum(!w), "rows, due to NAs.\n")
+    message("Removing", sum(!w), "rows, due to NAs.\n")
 	
   diffs <- diffs[w,,drop=FALSE]
   ch <- ch[w]
@@ -134,7 +134,7 @@ setMethod("regionStats","matrix", function(x, design, fdrLevel=0.05, nPermutatio
 
   w <- rowSums( is.na(diffs) )==0
   if( verbose )
-    cat("Removing", sum(!w), "rows, due to NAs.\n")
+    message("Removing", sum(!w), "rows, due to NAs.\n")
 
 
   return(.regionStats(diffs, design, gsub("chr","",ndf$chr), ndf$position, fdrLevel, 
@@ -224,8 +224,8 @@ setMethod("regionStats","matrix", function(x, design, fdrLevel=0.05, nPermutatio
     pos <- nrow(.getRegions(realScore, ch, sp, nProbes, maxGap, cuts[i], twoSides, doJoin=FALSE))
     neg <- nrow(.getRegions(permScore, ch, sp, nProbes, maxGap, cuts[i], twoSides, doJoin=FALSE))
     fdr[i,] <- c(cuts[i],neg,pos,min(neg/pos,1))
-    if (verbose) cat(".")
+    if (verbose) message(".")
   }
-  if (verbose) cat("\n")
+  if (verbose) message("\n")
   as.data.frame(fdr)
 }

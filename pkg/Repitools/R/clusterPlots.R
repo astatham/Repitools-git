@@ -65,7 +65,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                                     if(summarize == "mean")
                                         colMeans(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE])
                                     else
-                                        colMedians(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE])
+                                        apply(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE],2,median)
                                    )
 
 	# Plot the lineplots by cluster.
@@ -104,7 +104,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
         else
             ranges <- c.list@.old.ranges
 
-	profiles <- lapply(cvgs, function(x)
+	      profiles <- lapply(cvgs, function(x)
                            {
                                lapply(cl.ord, function(y)
                                {
@@ -115,7 +115,8 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                                })
                            })
 
-        plot.new()
+        #plot.new()
+        grid.newpage()
         pushViewport(plotViewport(c(5, 5, 4, 2)))
         if(is.null(expr))
         {

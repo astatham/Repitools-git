@@ -5,29 +5,29 @@ setMethod("writeWig", "GRangesList", function(rs, seqLen, design=NULL, sample=20
 
 	scipen <- getOption("scipen")
 	options(scipen=100)
-	if (verbose) cat("Extending the reads by ", seqLen,"bp\n", sep="" )
+	if (verbose) message("Extending the reads by ", seqLen,"bp\n", sep="" )
 	rs.ext <- endoapply(rs, resize, seqLen)
-	if (verbose) cat("Creating coverage objects\n")
+	if (verbose) message("Creating coverage objects\n")
 	rs.cov <- IRanges::lapply(rs.ext, coverage)
 	if (normalise) {
-		if (verbose) cat("Calculating normalisation counts\n")
+		if (verbose) message("Calculating normalisation counts\n")
 		norm <- elementLengths(rs)/1000000
 	}
 	if (is.null(design)) {
-		if (verbose) cat("Default design matrix\n")
+		if (verbose) message("Default design matrix\n")
 		design <- matrix(0, nrow=length(rs), ncol=length(rs), dimnames=list(NULL, paste(names(rs), ".wig.gz", sep="")))
 		for (i in 1:length(rs)) design[i,i] <- 1
 	}
 	for (i in 1:ncol(design)) {
 		filename <- colnames(design)[i]
-		if (verbose) cat("Processing column",i,"of design matrix -",filename,"\n")
+		if (verbose) message("Processing column",i,"of design matrix -",filename,"\n")
 		f1 <- if (grepl("gz$",filename)) gzfile(filename, open="wt") else file(filename, open="wt")
 
 		thisDes <- which(design[,i]!=0)
 		thisMul <- design[thisDes,i]
 		rs.this <- rs.cov[thisDes]		
 		for (j in 1:length(rs.this[[1]])) {
-			if (verbose) cat(names(rs.this[[1]])[j]," ")
+			if (verbose) message(names(rs.this[[1]])[j]," ")
 			#Write header for this chromosome
 			writeLines(paste("variableStep chrom=", names(rs.this[[1]])[j]," span=", sample, sep=""), f1)
 			#ensure all lanes being used have the same length
@@ -40,7 +40,7 @@ setMethod("writeWig", "GRangesList", function(rs, seqLen, design=NULL, sample=20
 				else paste(bp, bp.score, sep="\t")
 			writeLines(temp, f1)
 		}
-		if (verbose) cat("\n")
+		if (verbose) message("\n")
 		close(f1)
 	}
 	options(scipen=scipen)
@@ -50,7 +50,7 @@ setMethod("writeWig", "AffymetrixCelSet", function(rs, design=NULL, log2adjust=T
 	scipen <- getOption("scipen")
 	options(scipen=100)
 	if (is.null(design)) {
-		if (verbose) cat("Default design matrix\n")
+		if (verbose) message("Default design matrix\n")
 		design <- matrix(0, nrow=length(rs), ncol=length(rs), dimnames=list(NULL, paste(getNames(rs), ".wig.gz", sep="")))
 		for (i in 1:length(rs)) design[i,i] <- 1
 	}
@@ -63,17 +63,17 @@ setMethod("writeWig", "AffymetrixCelSet", function(rs, design=NULL, log2adjust=T
 	
 	for (i in 1:ncol(design)) {
 		filename <- colnames(design)[i]
-		if (verbose) cat("Processing column",i,"of design matrix -",filename,"\n")
+		if (verbose) message("Processing column",i,"of design matrix -",filename,"\n")
 		f1 <- if (grepl("gz$",filename)) gzfile(filename, open="wt") else file(filename, open="wt")
 		for (chr in unique(probePositions$chr)) {
-			if (verbose) cat(chr," ")
+			if (verbose) message(chr," ")
 			thisChr <- which(probePositions$chr==chr)
 			#Write header for this chromosome
 			writeLines(paste("variableStep chrom=", chr," span=1",sep=""), f1)
 			temp <- paste(probePositions$position[thisChr], diffs[thisChr,i], sep="\t")
 			writeLines(temp, f1)
 		}
-				if (verbose) cat("\n")
+				if (verbose) message("\n")
 		close(f1)
 	}
 	options(scipen=scipen)

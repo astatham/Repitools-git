@@ -5,7 +5,7 @@ setMethod("profilePlots", "GRangesList", function(x, anno, design=NULL, up=7500,
 	anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
 	rownames(anno) <- anno$name
 	blockPos <- seq.int(-up, down, by)
-	if (verbose) cat("made blockPos\n")
+	if (verbose) message("made blockPos\n")
 	annoBlocks <- data.frame(chr=rep(anno$chr, each=length(blockPos)),
 		start=rep(anno$position-bw, each=length(blockPos)),
 		end=rep(anno$position+bw, each=length(blockPos)),
@@ -14,7 +14,7 @@ setMethod("profilePlots", "GRangesList", function(x, anno, design=NULL, up=7500,
 	annoBlocks$end[annoBlocks$strand=="+"] <- annoBlocks$end[annoBlocks$strand=="+"] + blockPos
 	annoBlocks$start[annoBlocks$strand=="-"] <- annoBlocks$start[annoBlocks$strand=="-"] - blockPos
 	annoBlocks$end[annoBlocks$strand=="-"] <- annoBlocks$end[annoBlocks$strand=="-"] - blockPos
-	if (verbose) cat("made annoBlocks\n")
+	if (verbose) message("made annoBlocks\n")
 	if (!is.null(design)) {
 		stopifnot(all(design %in% c(-1,0,1)), nrow(design)==length(x))
 		inUse <- !apply(design==0,1,all)
@@ -22,13 +22,13 @@ setMethod("profilePlots", "GRangesList", function(x, anno, design=NULL, up=7500,
 	} else inUse <- rep(TRUE, length(x))
 	annoCounts <- annotationBlocksCounts(x[inUse], annoBlocks, seq.len, verbose)
 	if (total.lib.size) {
-		if (verbose) cat("normalising to total library sizes\n")
+		if (verbose) message("normalising to total library sizes\n")
 		totalReads <- elementLengths(x[inUse])
 		annoCounts <- t(t(annoCounts)/totalReads)*1000000
 	}
-	if (verbose) cat("made annoCounts\n")
+	if (verbose) message("made annoCounts\n")
 	if (!is.null(design)) {
-		if (verbose) cat("applying design matrix\n")
+		if (verbose) message("applying design matrix\n")
 		design <- apply(design, 2, function(x) {
 					x[x==1] <- 1/sum(x==1)
 					x[x==-1] <- -1/sum(x==-1)
@@ -37,7 +37,7 @@ setMethod("profilePlots", "GRangesList", function(x, anno, design=NULL, up=7500,
 		annoCounts <- annoCounts %*% design 
 	}
 	annoTable <- matrix(1:nrow(annoCounts), byrow=TRUE, ncol=length(blockPos), nrow=nrow(anno), dimnames=list(NULL, blockPos))
-	if (verbose) cat("made annoTable\n")
+	if (verbose) message("made annoTable\n")
 	profilePlots(annoCounts, annoTable, remove.zeros=FALSE, use.mean=TRUE, ...)
 })
 
@@ -58,7 +58,7 @@ setMethod("profilePlots", "AffymetrixCelSet", function(x, probe.map=NULL, anno=N
 		lookupT <- makeWindowLookupTable(annot$indexes, annot$offsets,
 				starts = seq(-up-bw, down-bw, by), ends = seq(-up+bw, down+bw, by))
 	} else {
-		if (verbose) cat("Using supplied probe.map\n")
+		if (verbose) message("Using supplied probe.map\n")
 		probePositions <- probe.map$probePositions
 		lookupT <- probe.map$lookupT
 	}
