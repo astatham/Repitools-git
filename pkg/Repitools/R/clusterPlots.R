@@ -115,8 +115,8 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                                })
                            })
 
-        #plot.new()
-        grid.newpage()
+        plot.new()
+        #grid.newpage()
         pushViewport(plotViewport(c(5, 5, 4, 2)))
         if(is.null(expr))
         {
@@ -168,16 +168,25 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 
         if(!is.null(expr))
         {
-            box.data <- lapply(cl.levels[rev(cl.ord)], function(x)
-                                                      {
-                                                         expr[cl.id == x]
-                                                      })
+            box.data <- lapply(cl.levels[rev(cl.ord)], function(x) expr[cl.id == x])
+            box.data <- boxplot(box.data, plot=FALSE)
 
             pushViewport(viewport(layout.pos.col = n.marks + 2))
             par(plt = gridFIG(), new = TRUE)
-            boxplot(box.data, horizontal = TRUE, pch = 19, yaxt = 'n', xlab = expr.name)
-            popViewport()
+
+            plot.locs <- c(unlist(box.data$stats), unlist(box.data$out))
+            max.expr <- 1.1 * max(plot.locs)
+            min.data <- min(plot.locs)
+            min.expr <- ifelse(min.data < 0, min.data * 1.1, min.data * 0.9)
+            
+            nclust <- ncol(box.data$stats)
+            plot.new()
+            plot.window(xlim = c(min.expr, max.expr), ylim = c(0, nclust), xaxs = 'i', yaxs = 'i')
+            axis(1)
+            bxp(box.data, at = (1:nclust)-0.5, add = TRUE, horizontal = TRUE, xaxt = 'n', yaxt="n")
+
         }
+        popViewport(0)
     } else { # Plot a heatmap.
         if(is.null(c.list@.old.ranges))
             ranges <- lapply(cvgs, range)
