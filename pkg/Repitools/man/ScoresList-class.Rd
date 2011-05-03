@@ -44,7 +44,7 @@
 	Creates a ScoresList object, keeping only the \code{i} matrices.
     }
     \item{}{
-	\code{subsetRows(x, i)}
+	\code{subsetRows(x, i = NULL)}
 	Creates a ScoresList object, keeping only the \code{i} features.
     }
   }

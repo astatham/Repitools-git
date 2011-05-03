@@ -1,9 +1,9 @@
 \name{BAM2GenomicRanges}
-
 \alias{BAM2GRanges}
 \alias{BAM2GRangesList}
 \alias{BAM2GRanges,character-method}
 \alias{BAM2GRangesList,character-method}
+
 \title{Read in a (list of) BAM file(s) into a GRanges(List) object.}
 \description{
   A wrapper script for coverting the contents of BAM files for use with

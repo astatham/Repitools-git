@@ -11,7 +11,7 @@
 }
 \usage{
   \S4method{featureBlocks}{data.frame}(anno, ...)
-  \S4method{featureBlocks}{GRanges}(anno, up, down, dist = c("base", "percent"),
+  \S4method{featureBlocks}{GRanges}(anno, up = NULL, down = NULL, dist = c("base", "percent"),
                                     keep.strand = FALSE)
 }
 \arguments{

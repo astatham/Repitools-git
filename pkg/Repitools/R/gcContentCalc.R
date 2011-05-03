@@ -1,6 +1,8 @@
-setGeneric("gcContentCalc", function(x, ...){standardGeneric("gcContentCalc")})
+setGeneric("gcContentCalc", function(x, organism, ...){standardGeneric("gcContentCalc")})
 
-setMethod("gcContentCalc", "GRanges", function(x, organism) {
+setMethod("gcContentCalc", c("GRanges", "BSgenome"),
+    function(x, organism)
+{
     require(GenomicRanges)
     require(BSgenome)
     
@@ -10,7 +12,11 @@ setMethod("gcContentCalc", "GRanges", function(x, organism) {
     (tempAlphabet[,"C"]+tempAlphabet[,"G"])
 })
 
-setMethod("gcContentCalc", "data.frame", function(x, window=500, organism) {
+setMethod("gcContentCalc", c("data.frame", "BSgenome"),
+    function(x, organism, window = NULL)
+{
+    if(is.null(window))
+        stop("Window size not given.")
     require(GenomicRanges)
 
     if (is.null(x$position)) x$position <- ifelse(x$strand == '+', x$start, x$end)

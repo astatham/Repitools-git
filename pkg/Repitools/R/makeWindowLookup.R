@@ -1,24 +1,34 @@
-makeWindowLookupTable <- function(indexes, offsets, starts, ends) {
-	lookupTable <- matrix(NA,nrow=length(indexes),ncol=length(starts))
-	colnames(lookupTable) <- (starts+ends)/2
-	rownames(lookupTable) <- names(indexes)
+makeWindowLookupTable <- function(indexes = NULL, offsets = NULL, starts = NULL, ends = NULL)
+{
+    if(is.null(indexes))
+        stop("probe indexes not given.")
+    if(is.null(offsets))
+        stop("probe offsets not given.")
+    if(is.null(starts))
+        stop("starts of windows not given.")
+    if(is.null(ends))
+        stop("ends of windows not given.")
 
-	ind <- unlist(indexes)
-	off <- unlist(offsets, use.names=FALSE)
-	genes <- unlist(mapply(rep, 1:length(indexes), sapply(indexes, length)))
+    lookupTable <- matrix(NA,nrow=length(indexes),ncol=length(starts))
+    colnames(lookupTable) <- (starts+ends)/2
+    rownames(lookupTable) <- names(indexes)
 
-	off.IRanges <- IRanges(start=off, width=1)
-	o <- findOverlaps(query=off.IRanges, subject=IRanges(start=starts, end=ends))@matchMatrix
-	o <- tapply(o[,1], o[,2], list)
+    ind <- unlist(indexes)
+    off <- unlist(offsets, use.names=FALSE)
+    genes <- unlist(mapply(rep, 1:length(indexes), sapply(indexes, length)))
 
-	for (i in 1:length(o)) {
-		pos <- as.integer(names(o)[i])
-		genes.mid <- tapply(o[[i]], genes[o[[i]]], function(x, midpt) {
-			return(ind[x[which.min(abs(off[x]-midpt))]])
-		}, (starts[pos]+ends[pos])/2)
+    off.IRanges <- IRanges(start=off, width=1)
+    o <- findOverlaps(query=off.IRanges, subject=IRanges(start=starts, end=ends))@matchMatrix
+    o <- tapply(o[,1], o[,2], list)
+
+    for (i in 1:length(o)) {
+        pos <- as.integer(names(o)[i])
+        genes.mid <- tapply(o[[i]], genes[o[[i]]], function(x, midpt) {
+			       return(ind[x[which.min(abs(off[x]-midpt))]])
+		           }, (starts[pos]+ends[pos])/2)
 		lookupTable[as.integer(names(genes.mid)),pos] <- genes.mid
-	}
-	return(lookupTable)
+    }
+    return(lookupTable)
 }
 
 

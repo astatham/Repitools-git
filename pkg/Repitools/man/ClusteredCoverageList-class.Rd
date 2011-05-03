@@ -51,7 +51,7 @@
 	Creates a ClusteredCoverageList object, keeping only the \code{i} matrices.
     }
     \item{}{
-	\code{subsetRows(x, i)}
+	\code{subsetRows(x, i = NULL)}
 	Creates a ClusteredCoverageList object, keeping only the \code{i} features.
     }
     \item{}{

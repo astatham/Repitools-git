@@ -2,10 +2,11 @@ setGeneric("featureBlocks", signature = "anno", function(anno, ...)
                                 {standardGeneric("featureBlocks")})
 
 setMethod("featureBlocks", "GRanges",
-    function(anno, up, down, dist = c("base", "percent"), keep.strand = FALSE)
+    function(anno, up = NULL, down = NULL, dist = c("base", "percent"), keep.strand = FALSE)
 {
     require(GenomicRanges)
     dist <- match.arg(dist)
+    .validate(anno, up, down)
 
     str <- as.character(strand(anno))
     f.st <- start(anno)

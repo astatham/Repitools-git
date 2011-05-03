@@ -1,9 +1,11 @@
-setGeneric("genomeBlocks", function(genome, chrs = names(genome), width,
-            spacing = width) {standardGeneric("genomeBlocks")})
+setGeneric("genomeBlocks", function(genome, ...) {standardGeneric("genomeBlocks")})
 
-setMethod("genomeBlocks", "numeric", function(genome, chrs = names(genome), width,
-           spacing = width)
+setMethod("genomeBlocks", "numeric",
+    function(genome, chrs = names(genome), width = NULL, spacing = width)
 {
+    if(is.null(width))
+        stop("Block width not given.")
+
     require(GenomicRanges)
 
     chr.windows <- lapply(chrs, function(x)
@@ -20,8 +22,11 @@ setMethod("genomeBlocks", "numeric", function(genome, chrs = names(genome), widt
 })
 
 setMethod("genomeBlocks", "BSgenome",
-    function(genome, chrs = seqnames(genome), width, spacing = width)
+    function(genome, chrs = seqnames(genome), width = NULL, spacing = width)
 {
+    if(is.null(width))
+        stop("Block width not given.")
+
     require(BSgenome)
     
     chr.lengths <- seqlengths(genome)[chrs]

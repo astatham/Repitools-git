@@ -10,9 +10,9 @@
   chromosomes of a given genome.
 }
 \usage{
-  \S4method{genomeBlocks}{numeric}(genome, chrs = names(genome), width,
+  \S4method{genomeBlocks}{numeric}(genome, chrs = names(genome), width = NULL,
                                    spacing = width)
-  \S4method{genomeBlocks}{BSgenome}(genome, chrs = seqnames(genome), width,
+  \S4method{genomeBlocks}{BSgenome}(genome, chrs = seqnames(genome), width = NULL,
                                     spacing = width)
 }
 \arguments{

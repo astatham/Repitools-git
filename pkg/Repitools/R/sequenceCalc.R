@@ -1,7 +1,7 @@
-setGeneric("sequenceCalc", function(x, ...) standardGeneric("sequenceCalc"))
+setGeneric("sequenceCalc", function(x, organism, ...) standardGeneric("sequenceCalc"))
 
-setMethod("sequenceCalc", "GRanges",
-    function(x, organism, pattern, fixed=TRUE, positions=FALSE)
+setMethod("sequenceCalc", c("GRanges", "BSgenome"),
+    function(x, organism, pattern, fixed = TRUE, positions = FALSE)
 {
     chrs <- levels(seqnames(x))
     names(chrs) <- chrs
@@ -15,14 +15,18 @@ setMethod("sequenceCalc", "GRanges",
     scores
 })
 
-setMethod("sequenceCalc", "data.frame",
-    function(x, window=500, organism, positions=FALSE, ...)
+setMethod("sequenceCalc", c("data.frame", "BSgenome"),
+    function(x, organism, window = NULL, positions = FALSE, ...)
 {
+    if(is.null(window))
+        stop("Window size not given.")
+
     if (is.null(x$position)) x$position <- ifelse(x$strand == '+', x$start, x$end)
     x <- GRanges(x$chr, IRanges(x$position, width=1), seqlengths=seqlengths(organism)[unique(x$chr)])
-    x <- resize(x, window, fix="center")
-    if (positions) {
-        pos <- sequenceCalc(x, organism, positions=TRUE, ...)
-        return(lapply(pos, function(x) if (!is.null(x)) return(x-window/2)))
+    x <- resize(x, window, fix = "center")
+    if(positions)
+    {
+        pos <- sequenceCalc(x, organism, positions = TRUE, ...)
+        lapply(pos, function(y) if(!is.null(y)) return(y - window / 2))
     } else sequenceCalc(x, organism, ...)
 })

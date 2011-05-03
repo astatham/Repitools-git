@@ -98,8 +98,11 @@ setMethod(".blocksStats", c("matrix", "GRanges"),
 })
 
 setMethod(".blocksStats", c("AffymetrixCelSet", "GRanges"),
-    function(x, anno, up, down, p.anno = NULL, chrs = NULL, mapping = NULL, design, ...)
+    function(x, anno, up, down, p.anno = NULL, chrs = NULL, mapping = NULL,
+             design = NULL, ...)
 {
+    if(is.null(design))
+        stop("No design matrix given.")
     require(aroma.affymetrix)
 
     if(nrow(design) != nbrOfArrays(x))
@@ -119,9 +122,12 @@ setMethod(".blocksStats", c("AffymetrixCelSet", "GRanges"),
 })
 
 setMethod(".blocksStats", c("GRangesList", "GRanges"),
-    function(x, anno, up, down, seq.len = NULL, design, lib.size = "lane",
+    function(x, anno, up, down, seq.len = NULL, design = NULL, lib.size = "lane",
              Acutoff = NULL, p.adj = "fdr", verbose = TRUE)
 {
+    if(is.null(design))
+        stop("No design matrix given.")
+
     require(edgeR)
 
     if(lib.size == "ref" && is.null(Acutoff))

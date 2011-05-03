@@ -6,7 +6,7 @@
 Reads all files in Nimblegen pair format within the specified directory, returning log2 intensities of probes referenced by the supplied ndf data frame.
 }
 \usage{
-loadSampleDirectory(path, ndf, what="Cy3", ncols = 768)
+loadSampleDirectory(path = NULL, ndf = NULL, what="Cy3", ncols = 768)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

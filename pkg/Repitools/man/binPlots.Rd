@@ -8,9 +8,9 @@
 Using a specified ordering of genes, they are split into multiple bins.  In each bin, the signal across is summarized and displayed visually.  The plots are created in an array, one row for each column of the data matrix and one column for each ordering specified.
 }
 \usage{
-  \S4method{binPlots}{GRangesList}(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, lib.size="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...)
+  \S4method{binPlots}{GRangesList}(x, anno=NULL, design=NULL, up=7500, down=2500, by=100, bw=300, lib.size="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...)
   \S4method{binPlots}{AffymetrixCelSet}(x, probe.map=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2.adj=TRUE, verbose=FALSE, ...)   
-  \S4method{binPlots}{matrix}(x, lookup.table, ordering, ord.label="", plot.type = c("line", "heatmap", "terrain", "boxplot"), nbins = 10, cols = NULL, lwd = 3, lty = 1, same.scale = TRUE, symm.scale = FALSE, verbose = FALSE, remove.zeros=TRUE, use.mean=FALSE, ...)
+  \S4method{binPlots}{matrix}(x, lookup.table=NULL, ordering=NULL, ord.label="", plot.type = c("line", "heatmap", "terrain", "boxplot"), nbins = 10, cols = NULL, lwd = 3, lty = 1, same.scale = TRUE, symm.scale = FALSE, verbose = FALSE, remove.zeros=TRUE, use.mean=FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

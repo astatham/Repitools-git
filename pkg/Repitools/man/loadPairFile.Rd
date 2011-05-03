@@ -6,7 +6,7 @@
 Reads a file in Nimblegen pair format, returning log2 intensities of probes referenced by the supplied ndf data frame.
 }
 \usage{
-loadPairFile(filename, ndf, ncols = 768)
+loadPairFile(filename = NULL, ndf = NULL, ncols = 768)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

@@ -2,9 +2,11 @@ setOldClass("AffymetrixCelSet")
 
 setGeneric("binPlots", signature = "x", function(x, ...){standardGeneric("binPlots")})
 
-setMethod("binPlots", "GRangesList", function(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, lib.size="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...) {
+setMethod("binPlots", "GRangesList", function(x, anno=NULL, design=NULL, up=7500, down=2500, by=100, bw=300, lib.size="lane", seq.len=NULL, verbose=FALSE, Acutoff=NULL, ...) {
         require(GenomicRanges)
 
+        if(is.null(anno))
+            stop("Annotation not given.")
 	anno$position <- ifelse(anno$strand=="+", anno$start, anno$end)
 	rownames(anno) <- anno$name
 	if(lib.size == "ref" && is.null(Acutoff))
@@ -80,7 +82,12 @@ setMethod("binPlots", "AffymetrixCelSet", function(x, probe.map=NULL, anno=NULL,
 })
 
 
-setMethod("binPlots", "matrix", function(x, lookup.table, ordering, ord.label="", plot.type=c("line","heatmap","terrain","boxplot"), nbins=10, cols=NULL, lwd=3, lty=1, same.scale=TRUE, symm.scale=FALSE, verbose=FALSE, remove.zeros=TRUE, use.mean=FALSE, ...) {
+setMethod("binPlots", "matrix", function(x, lookup.table=NULL, ordering=NULL, ord.label="", plot.type=c("line","heatmap","terrain","boxplot"), nbins=10, cols=NULL, lwd=3, lty=1, same.scale=TRUE, symm.scale=FALSE, verbose=FALSE, remove.zeros=TRUE, use.mean=FALSE, ...) {
+    if(is.null(lookup.table))
+        stop("Lookup table not given.")
+    if(is.null(ordering))
+        stop("Ordering not given.")    
+
   def.par <- par(no.readonly = TRUE) # save default, for resetting...
   plot.type <- match.arg(plot.type)
   if(!ncol(ordering) == ncol(x)) {

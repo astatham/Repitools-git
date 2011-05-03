@@ -5,7 +5,7 @@
 Reads a Nimblegen microarray design file (NDF file) which describes positions and sequences of probes on a Nimblegen microarray.
 }
 \usage{
-processNDF(filename, ncols = 768)
+processNDF(filename = NULL, ncols = 768)
 }
 \arguments{
   \item{filename}{the name of the Nimblegen microarray design file}

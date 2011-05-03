@@ -7,8 +7,8 @@
              function will make a series of bar chart plots, one for each cluster.
 }
 \usage{
-  \S4method{plotClusters}{data.frame}(x, s.col, non.cl, ...)
-  \S4method{plotClusters}{GRanges}(x, s.col, non.cl, ...)
+  \S4method{plotClusters}{data.frame}(x, s.col = NULL, non.cl = NULL, ...)
+  \S4method{plotClusters}{GRanges}(x, s.col = NULL, non.cl = NULL, ...)
 }
 \arguments{
   \item{x}{A summary of genes and their statistical score, and the cluster that

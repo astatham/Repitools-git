@@ -1,5 +1,4 @@
-setGeneric("genQC", signature = c("qc.data", "expt"), function(qc.data, expt)
-                                              {standardGeneric("genQC")})
+setGeneric("genQC", function(qc.data, ...) {standardGeneric("genQC")})
 
 .plotFreqs <- function(freqs, l.names, aligned)
 {
@@ -16,7 +15,7 @@ setGeneric("genQC", signature = c("qc.data", "expt"), function(qc.data, expt)
 }
 
 setMethod("genQC", "SequenceQCSet", 
-    function(qc.data, expt)
+    function(qc.data, expt = "Experiment")
 {
     if(is.null(names(qc.data)))
         l.names <- paste("Lane", 1:length(qc.data))
@@ -92,11 +91,11 @@ setMethod("genQC", "SequenceQCSet",
 })
 
 setMethod("genQC", "character", 
-    function(qc.data, expt)
+    function(qc.data, ...)
 {
     qual <- lapply(qc.data, function(x) get(load(x)))
 
     QCset <- new("SequenceQCSet", qual)
     names(QCset) <- names(qc.data)
-    genQC(QCset, expt)
+    genQC(QCset, ...)
 })

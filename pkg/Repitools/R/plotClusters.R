@@ -1,8 +1,13 @@
 setGeneric("plotClusters", function(x, s.col, non.cl, ...)
           {standardGeneric("plotClusters")})
 
-setMethod("plotClusters", "GRanges", function(x, s.col, non.cl, ...)
+setMethod("plotClusters", "GRanges", function(x, s.col = NULL, non.cl = NULL, ...)
 {
+    if(is.null(s.col))
+        stop("Score column not given.")
+    if(is.null(non.cl))
+        stop("Cluster exclusion ID given.")
+
     require(GenomicRanges)
 
     elementMetadata(x) <- DataFrame(elementMetadata(x),
@@ -26,8 +31,13 @@ setMethod("plotClusters", "GRanges", function(x, s.col, non.cl, ...)
     }))
 })
 
-setMethod("plotClusters", "data.frame", function(x, s.col, non.cl, ...)
+setMethod("plotClusters", "data.frame", function(x, s.col = NULL, non.cl = NULL, ...)
 {
+    if(is.null(s.col))
+        stop("Score column not given.")
+    if(is.null(non.cl))
+        stop("Cluster exclusion ID given.")
+
     require(GenomicRanges)
 
     s.name <- colnames(x)[s.col]

@@ -6,7 +6,7 @@
 \description{Function to calculate mappability of windows}
 \usage{
   \S4method{mappabilityCalc}{GRanges}(x, organism)
-  \S4method{mappabilityCalc}{data.frame}(x, window=500, organism)
+  \S4method{mappabilityCalc}{data.frame}(x, organism, window = NULL)
 }
 \arguments{
   \item{x}{A \code{GRanges} object or a \code{data.frame}, with columns \code{chr} and either \code{position} or \code{start}, \code{end} and \code{strand}.}

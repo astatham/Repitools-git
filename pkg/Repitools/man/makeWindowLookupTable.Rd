@@ -6,7 +6,7 @@
 To allow easy access to the probe-level data for either a gene, or an area of the promoter (over all genes), this routine takes the output of \code{annotationLookup} and organizes the indices into a table, one row for each gene and one column for each region of the promoter.
 }
 \usage{
-makeWindowLookupTable(indexes, offsets, starts, ends)
+  makeWindowLookupTable(indexes = NULL, offsets = NULL, starts = NULL, ends = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

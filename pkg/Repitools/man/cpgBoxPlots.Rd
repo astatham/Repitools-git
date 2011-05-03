@@ -8,7 +8,7 @@
 }
 \usage{
 \S4method{cpgBoxplots}{AffymetrixCelSet}(this, samples=c(1,2), subsetChrs="chr[1-5]", gcContent=7:18, calcDiff=FALSE, verbose=FALSE, nBins=40, pdfFile=NULL, ylim=if (calcDiff) c(-5,6) else c(4,15), col=if (calcDiff) "salmon" else c("lightgreen","lightblue"), mfrow=if (!is.null(pdfFile)) c(2,2) else c(1,1))
-\S4method{cpgBoxplots}{matrix}(this, ndfTable, organism, samples=c(1,2), subsetChrs="chr[1-5]", gcContent=7:18, calcDiff=FALSE, verbose=FALSE, nBins=40, pdfFile=NULL, ylim=if (calcDiff) c(-5,6) else c(4,15), col=if (calcDiff) "salmon" else c("lightgreen","lightblue"), mfrow=if (!is.null(pdfFile)) c(2,2) else c(1,1))
+\S4method{cpgBoxplots}{matrix}(this, ndfTable = NULL, organism, samples=c(1,2), subsetChrs="chr[1-5]", gcContent=7:18, calcDiff=FALSE, verbose=FALSE, nBins=40, pdfFile=NULL, ylim=if (calcDiff) c(-5,6) else c(4,15), col=if (calcDiff) "salmon" else c("lightgreen","lightblue"), mfrow=if (!is.null(pdfFile)) c(2,2) else c(1,1))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

@@ -131,16 +131,26 @@ setMethod(".featureScores", c(".SequencingData", "GRanges"),
 })
 
 setMethod(".featureScores", c("matrix", "GRanges"),
-    function(x, y, up, down, p.anno, mapping, freq, log2.adj = TRUE, verbose = TRUE)
+    function(x, y, up, down, p.anno, mapping = NULL, freq, log2.adj = TRUE, verbose = TRUE)
 {
-    if("index" %in% colnames(x)) p.inds <- x$index else p.inds <- 1:nrow(x)    
-    ind.col <- colnames(p.anno) == "index"
-    mapping <- annotationLookup(p.anno[, !ind.col], y, up, down, verbose)
-    p.used <- unique(unlist(mapping$indexes, use.names = FALSE))
-    p.anno <- p.anno[p.used, ]
-    mapping <- annotationLookup(p.anno[, !ind.col], y, up, down, verbose)
-    
-    intens <- x[p.anno$index, ]
+    if(is.null(p.anno))
+        stop("Probe annotation not given.")
+    if(is.null(freq))
+        stop("Sampling frequency not given.")
+
+    if(is.null(mapping))
+    {
+        if("index" %in% colnames(x)) p.inds <- x$index else p.inds <- 1:nrow(x)    
+        ind.col <- colnames(p.anno) == "index"
+        mapping <- annotationLookup(p.anno[, !ind.col], y, up, down, verbose)
+        p.used <- unique(unlist(mapping$indexes, use.names = FALSE))
+        p.anno <- p.anno[p.used, ]
+        mapping <- annotationLookup(p.anno[, !ind.col], y, up, down, verbose)
+        intens <- x[p.anno$index, ]
+    } else {
+        intens <- x
+    }
+
     if(log2.adj) intens <- log2(intens)
 
     points.probes <- makeWindowLookupTable(mapping$indexes, mapping$offsets,

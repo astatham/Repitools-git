@@ -5,12 +5,10 @@ setGeneric(".validate", signature = c("anno"), function(anno, up, down)
 
 setMethod(".validate", "GRanges", function(anno, up, down)
 {
-    if(is.null(anno))
-        stop("Mandatory argument 'anno' not provided.")
     if(is.null(up))
-        stop("Mandatory argument 'up' not provided.")
+        stop("Mandatory argument 'up' not given.")
     if(is.null(down))
-        stop("Mandatory argument 'down' not provided.")
+        stop("Mandatory argument 'down' not given.")
 
     str <- strand(anno)
 

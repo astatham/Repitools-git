@@ -11,8 +11,8 @@
 }
 \usage{
   \S4method{getCN}{data.frame,data.frame}(input.windows, ip.windows, ...)
-  \S4method{getCN}{GRanges,GRanges}(input.windows, ip.windows, input.counts, ...,
-                   verbose = TRUE)
+  \S4method{getCN}{GRanges,GRanges}(input.windows, ip.windows, input.counts = NULL,
+                                    ..., verbose = TRUE)
 }
 \arguments{
   \item{input.windows}{A \code{data.frame} with (at least) columns \code{chr},

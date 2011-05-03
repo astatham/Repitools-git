@@ -1,8 +1,11 @@
 setGeneric("getCN", function(input.windows, ip.windows, ...){standardGeneric("getCN")})
 
 setMethod("getCN", c("GRanges", "GRanges"),
-    function(input.windows, ip.windows, input.counts, ..., verbose = TRUE)
+    function(input.windows, ip.windows, input.counts = NULL, ..., verbose = TRUE)
 {
+    if(is.null(input.counts))
+        stop("Matrix of counts for input types not given.")
+
     if(length(input.windows) != nrow(input.counts))
         stop("Rows of counts differ to rows of input regions.\n")
     

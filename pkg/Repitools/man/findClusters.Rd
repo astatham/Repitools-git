@@ -6,8 +6,9 @@
   scores will be reported.
 }
 \usage{
-  findClusters(stats, score.col, w.size = 5, n.med, n.consec, cut.samps, maxFDR = 0.05,
-               trend = c("down", "up"), n.perm = 100, getFDRs = FALSE, verbose = TRUE)
+  findClusters(stats, score.col = NULL, w.size = NULL, n.med = NULL, n.consec = NULL,
+               cut.samps = NULL, maxFDR = 0.05, trend = c("down", "up"), n.perm = 100,
+               getFDRs = FALSE, verbose = TRUE)
 }
 \arguments{
   \item{stats}{A \code{data.frame} with (at least) column \code{chr}, and a column

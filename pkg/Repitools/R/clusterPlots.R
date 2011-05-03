@@ -65,7 +65,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                                     if(summarize == "mean")
                                         colMeans(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE])
                                     else
-                                        apply(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE],2,median)
+                                        apply(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE], 2, median)
                                    )
 
 	# Plot the lineplots by cluster.
@@ -96,9 +96,8 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	}, profiles, as.list(cl.ord)))
     } else if(plot.type == "line") # Plot a table of lineplots.
     {
-        require(grid)
-        require(gridBase)
-
+        old.par <- par(no.readonly = TRUE)
+        par(oma = c(5, 6, 5, 2), mar = c(0, 0, 0, 0), xpd = NA)
         if(is.null(c.list@.old.ranges))
             ranges <- lapply(cvgs, range)
         else
@@ -115,78 +114,59 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                                })
                            })
 
-        plot.new()
-        #grid.newpage()
-        pushViewport(plotViewport(c(5, 5, 4, 2)))
-        if(is.null(expr))
-        {
-            grid.cols <- n.marks + 1
-            lp.width <- 0.95 / n.marks
-        } else { 
-            grid.cols <- n.marks + 2
-            lp.width <- 0.75 / n.marks
-        }
-        pushViewport(viewport(layout = grid.layout(n.clusters, grid.cols,
-                              widths = c(rep(lp.width, n.marks), 0.05, if(!is.null(expr)) 0.20))))
-        grid.text(t.name, x = 0.5, y = unit(1, "npc") + unit(2, "lines"), gp = gpar(fontface = "bold"))
+        n.boxes <- (n.marks) * n.clusters
+        layout(matrix(c(1:n.boxes, rep(n.boxes + 1, n.clusters), if(!is.null(expr)) rep(n.boxes + 2, n.clusters)),
+                      nrow = n.clusters),
+               widths = c(rep(0.8 / n.marks, n.marks), 0.05, if(!is.null(expr)) 0.15))
+
         x.lims <- c(pos[1], pos[length(pos)])
         for(col.index in 1:n.marks)
         {
             for(row.index in 1:n.clusters)
             {
-                pushViewport(viewport(layout.pos.row = row.index, layout.pos.col = col.index,
-                                      xscale = x.lims, yscale = ranges[[col.index]]
-                                     )
-                            )
-                if(row.index == 1 && col.index == 1)
-                    grid.yaxis(at = c(ranges[[col.index]][1],
-                                      (ranges[[col.index]][1] + ranges[[col.index]][2]) / 2,
-                                      ranges[[col.index]][2]),
-                               label = score.labels)
+                matplot(pos, profiles[[col.index]][[row.index]], type = 'l', ylim = ranges[[col.index]],
+                        xlab = "", ylab = "", xaxs = 'i', yaxs = 'i', xaxt = 'n', yaxt = 'n',
+                        col = cols[col.index], ...)
                 if(row.index == n.clusters && col.index == 1)
-                    grid.xaxis()
+                {
+                    axis(1, pos, pos.labels)
+                    mtext("Relative Position", 1, 3)
+                }
+                if(row.index == 1 && col.index == 1)
+                {
+                    axis(2, c(0, 0.5, 1), labels = score.labels, las = 2)
+                    mtext("Read Coverage", 2, 3)
+                }
                 if(row.index == 1)
-                    grid.text(names(c.list)[col.index], y = unit(1, "npc") + unit(1, "lines"))
-
-                grid.rect()
-                grid.lines(pos, profiles[[col.index]][[row.index]], default.units = "native",
-                           gp = gpar(col = cols[col.index], ...))
-            
-                popViewport()
+                    title(names(c.list)[col.index], line = 2)
             }    
         }
-    
-        for(row.index in 1:n.clusters)
-        {
-            pushViewport(viewport(layout.pos.row = row.index, layout.pos.col = n.marks + 1))
-            grid.text(cl.levels[cl.ord[row.index]])
-            popViewport()
-        }
-        pushViewport(viewport(layout.pos.row = 1, layout.pos.col = n.marks + 1))
-        grid.text("ID", y = unit(1, "npc") + unit(1, "lines"))
-        popViewport()
+
+        plot.new()
+        plot.window(xlim = c(0, 2), ylim = c(0, n.clusters), xaxs = 'i', yaxs = 'i')
+        title("ID", line = 2)
+        text(rep(1, n.clusters), (n.clusters:1) - 0.5, 1:n.clusters)
 
         if(!is.null(expr))
         {
             box.data <- lapply(cl.levels[rev(cl.ord)], function(x) expr[cl.id == x])
-            box.data <- boxplot(box.data, plot=FALSE)
-
-            pushViewport(viewport(layout.pos.col = n.marks + 2))
-            par(plt = gridFIG(), new = TRUE)
+            box.data <- boxplot(box.data, plot = FALSE)
 
             plot.locs <- c(unlist(box.data$stats), unlist(box.data$out))
             max.expr <- 1.1 * max(plot.locs)
             min.data <- min(plot.locs)
             min.expr <- ifelse(min.data < 0, min.data * 1.1, min.data * 0.9)
             
-            nclust <- ncol(box.data$stats)
             plot.new()
-            plot.window(xlim = c(min.expr, max.expr), ylim = c(0, nclust), xaxs = 'i', yaxs = 'i')
+            plot.window(xlim = c(min.expr, max.expr), ylim = c(0, n.clusters),
+                        xaxs = 'i', yaxs = 'i')
             axis(1)
-            bxp(box.data, at = (1:nclust)-0.5, add = TRUE, horizontal = TRUE, xaxt = 'n', yaxt="n")
-
+            if(!is.null(expr.name)) mtext(expr.name, 1, 3)
+            bxp(box.data, at = (1:n.clusters) - 0.5, add = TRUE, horizontal = TRUE,
+               yaxt = 'n')
         }
-        popViewport(0)
+        mtext(t.name, font = 2, line = 3, outer = TRUE)
+        par(old.par)
     } else { # Plot a heatmap.
         if(is.null(c.list@.old.ranges))
             ranges <- lapply(cvgs, range)
@@ -245,7 +225,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
         plot.new()
         plot.window(xlim = c(0, 2), ylim = c(0, bounds[length(bounds)]), xaxs = 'i', yaxs = 'i')
         text(rep(1, n.clusters), cl.midpts, labels = cl.levels[rev(cl.ord)], cex = 2)
-        mtext("ID", line = 3)
+        title("ID")
 
 	par(mai = c(1.02, 0.05, 0.82, 0.50))
         if(!is.null(expr))
@@ -289,10 +269,10 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
     # maximum score.
     cvgs <- lapply(cvgs, function(x)
     {
-	    if(cap.type == "sep") max.cvg <- quantile(abs(x), cap.q)
-	    x[x > max.cvg] = max.cvg
-	    x[x < -max.cvg] = -max.cvg
-      x / max.cvg
+        if(cap.type == "sep") max.cvg <- quantile(abs(x), cap.q)
+        x[x > max.cvg] = max.cvg
+        x[x < -max.cvg] = -max.cvg
+        x / max.cvg
     })
 
     # Do the k-means clustering for all marks together.

@@ -38,10 +38,22 @@
     	clusterScores(scores.chr[, 1])
 }
 
-findClusters <- function(stats, score.col, w.size = 5, n.med, n.consec, cut.samps,
+findClusters <- function(stats, score.col = NULL, w.size = NULL, n.med = NULL, n.consec = NULL, cut.samps = NULL,
                          maxFDR = 0.05, trend = c("down", "up"), n.perm = 100,
                          getFDRs = FALSE, verbose = TRUE)
 {
+
+    if(is.null(score.col))
+        stop("Score column not given.")
+    if(is.null(w.size))
+        stop("Window size not given.")
+    if(is.null(n.med))
+        stop("Minimum median scores in window above cutoff not given.")
+    if(is.null(n.consec))
+        stop("Minimum consecutive scores in same direction not given.")
+    if(is.null(cut.samps))
+        stop("Cutoffs to try not given.")
+
     require(IRanges)
     require(zoo)
     trend <- match.arg(trend)

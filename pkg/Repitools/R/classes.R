@@ -57,8 +57,11 @@ setReplaceMethod("names", "ScoresList",
 
 setGeneric("subsetRows", function(x, i) {standardGeneric("subsetRows")})
 setMethod("subsetRows", "ScoresList",
-    function(x, i)
+    function(x, i = NULL)
 {
+    if(is.null(i))
+        stop("No row indices given to subset by.")
+
     new("ScoresList", names = x@names, anno = x@anno[i],
                       scores = lapply(x@scores, function(y) y[i, ]),
                       up = x@up, down = x@down, dist = x@dist,
@@ -123,8 +126,11 @@ setMethod("[", "ClusteredCoverageList",
     })
 
 setMethod("subsetRows", "ClusteredCoverageList",
-    function(x, i)
+    function(x, i = NULL)
 {
+    if(is.null(i))
+        stop("No row indices given to subset by.")
+
     old.ranges <- lapply(x@scores, range)
     new("ClusteredCoverageList", names = x@names,
         scores = lapply(x@scores, function(y) y[i, ]),
@@ -153,9 +159,9 @@ setClass(".CoverageSamples",
 			))
 
 # container for output of regionStats()    
-setClass("RegionStats",representation("list"))
+setClass("RegionStats", representation("list"))
 
-setMethod("show", "RegionStats",function(object) {
+setMethod("show", "RegionStats", function(object) {
   cat("Object of class 'RegionStats'.\n")
   cat("Results for: ", paste(names(object$regions),collapse=" "), "\n")
   cat("Names:", paste(names(object),collapse=" "), "\n")

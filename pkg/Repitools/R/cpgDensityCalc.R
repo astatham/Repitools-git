@@ -1,27 +1,26 @@
-setGeneric("cpgDensityCalc", function(x, ...) standardGeneric("cpgDensityCalc"))
+setGeneric("cpgDensityCalc", function(x, organism, ...) standardGeneric("cpgDensityCalc"))
 
-setMethod("cpgDensityCalc", "GRangesList",
-    function(x, organism, seq.len = NULL, window = 500,
-             w.function = c("none", "linear", "exp", "log"), verbose = TRUE)
+setMethod("cpgDensityCalc", c("GRangesList", "BSgenome"),
+    function(x, organism, verbose = TRUE, ...)
 {
     samp.names <- if (is.null(names(x))) 1:length(x) else names(x)
     ans <- lapply(1:length(x), function(i)
         {
             if (verbose) message("Getting CpG density for ", samp.names[i])
-            cpgDensityCalc(x[[i]], organism, seq.len,  window, w.function, verbose)
+            cpgDensityCalc(x[[i]], organism, verbose = verbose, ...)
         })
     ans
 })
 
-setMethod("cpgDensityCalc", "GRanges",
-    function(x, organism, seq.len = NULL, window = 500,
+setMethod("cpgDensityCalc", c("GRanges", "BSgenome"),
+    function(x, organism, seq.len = NULL, window = NULL,
              w.function = c("none", "linear", "exp", "log"), verbose = TRUE)
 {
     require(GenomicRanges)
 
     w.function <- match.arg(w.function)
     if(!is.null(seq.len)) x <- suppressWarnings(resize(x, seq.len))
-    x <- suppressWarnings(resize(x, window, fix = "center"))
+    if(!is.null(window)) x <- suppressWarnings(resize(x, window, fix = "center"))
     if(w.function == "none") {
         cpgDensity <- sequenceCalc(x, organism, DNAString("CG"))
     } else {
@@ -40,7 +39,7 @@ setMethod("cpgDensityCalc", "GRanges",
     return(cpgDensity)
 })
 
-setMethod("cpgDensityCalc", "data.frame",
+setMethod("cpgDensityCalc", c("data.frame", "BSgenome"),
     function(x, organism, ...)
 {
     require(GenomicRanges)

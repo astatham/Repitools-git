@@ -8,28 +8,31 @@
 \alias{regionStats,matrix-method}
 \title{Find Regions of significance in microarray data}
 \description{
-The function finds the highest smoothed score cutoff for a pre-specified FDR. Smoothing is performed over a specified number of basepairs, and regions must have a minimum number of qualifying probes to be considered significant. The FDR is calculated as the ratio of the number of significant regions found in a permutation-based test, to the number found in the actual experimental microarray data. 
+  The function finds the highest smoothed score cutoff for a pre-specified FDR.
+  Smoothing is performed over a specified number of basepairs, and regions must
+  have a minimum number of qualifying probes to be considered significant. The FDR
+  is calculated as the ratio of the number of significant regions found in a
+  permutation-based test, to the number found in the actual experimental microarray data.
 }
 \usage{
-  \S4method{regionStats}{matrix}(x, design, fdrLevel=0.05, nPermutations=5, probeWindow=600, meanTrim=.1, nProbes=10, maxGap=500, twoSides=TRUE, verbose=TRUE, ndf, returnTrimmedMeans = FALSE, ...)
-  \S4method{regionStats}{AffymetrixCelSet}(x, design, fdrLevel=0.05, nPermutations=5, probeWindow=600, meanTrim=.1, nProbes=10, maxGap=500, twoSides=TRUE, verbose=TRUE, ind=NULL, returnTrimmedMeans = FALSE, ...)
+  \S4method{regionStats}{matrix}(x, design = NULL, maxFDR=0.05, n.perm=5, window=600, mean.trim=.1, min.probes=10, max.gap=500, two.sides=TRUE, ndf, return.tm = FALSE, verbose=TRUE)
+  \S4method{regionStats}{AffymetrixCelSet}(x, design = NULL, maxFDR=0.05, n.perm=5, window=600, mean.trim=.1, min.probes=10, max.gap=500, two.sides=TRUE, ind=NULL, return.tm = FALSE, verbose=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{An \code{AffymetrixCelSet} or \code{matrix} of array data to use.}
   \item{design}{A design matrix of how to manipulate }
-  \item{fdrLevel}{Cutoff of the maximum acceptable FDR}
-  \item{nPermutations}{Number of permutations to use }
-  \item{probeWindow}{Size of window, in base pairs, to check for }
-  \item{meanTrim}{A number representing the top and bottom fraction of ordered values in a window to be removed, before the window mean is calculated.}
-  \item{nProbes}{Minimum number of probes in a window, for the region to qualify as a region of significance.}
-  \item{maxGap}{Maximum gap between significant probes allowable.} 
-  \item{twoSides}{Look for both significant positive and negative regions.}
-  \item{verbose}{Print debugging comments while executing.} 
+  \item{maxFDR}{Cutoff of the maximum acceptable FDR}
+  \item{n.perm}{Number of permutations to use }
+  \item{window}{Size of window, in base pairs, to check for }
+  \item{mean.trim}{A number representing the top and bottom fraction of ordered values in a window to be removed, before the window mean is calculated.}
+  \item{min.probes}{Minimum number of probes in a window, for the region to qualify as a region of significance.}
+  \item{max.gap}{Maximum gap between significant probes allowable.} 
+  \item{two.sides}{Look for both significant positive and negative regions.}
   \item{ind}{A vector of the positions of the probes on the array}
   \item{ndf}{The Nimblegen Definition File for Nimblegen array data.}
-  \item{returnTrimmedMeans}{If TRUE, the values of the trimmed means of the intensities and permuted intensities are also retuned from the function.}
-  \item{...}{Arguments passed to internal function for common processing.}
+  \item{return.tm}{If TRUE, the values of the trimmed means of the intensities and permuted intensities are also retuned from the function.}
+  \item{verbose}{Whether to print the progress of processing.}
 }
 \value{
 	A \code{RegionStats} object (list) with elements
@@ -62,6 +65,6 @@ design <- matrix( c(1,-1,rep(0,length(cs)-2)), ncol=1, dimnames=list(getNames(cs
 # just get indices of chr7 here
 ind <- getCellIndices(cdfU, unit = indexOf(cdfU, "chr7F"), unlist = TRUE, useNames = FALSE)
 
-regs <- regionStats(csMNU, design, ind = ind, probeWindow = 500, verbose = TRUE)
+regs <- regionStats(csMNU, design, ind = ind, window = 500, verbose = TRUE)
 }
 }
