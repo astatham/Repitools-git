@@ -218,7 +218,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	    axis(1, pos, labels = pos.labels)		
 
 	    # Add lines delimiting the cluster boundaries.
-	    abline(h = bounds[-n.clusters], lwd = 2)
+	    abline(h = bounds[-n.clusters], lwd = 3)
 	}, cvgs, names(c.list), plot.ranges)
 
         cl.midpts <- bounds - cl.sizes / 2
