@@ -40,7 +40,8 @@ setMethod(".featureScores", c("GRanges", ".CoverageSamples"),
     rownames(cvg.mat) <- .getNames(anno)
 
     new("ScoresList", names = "Undefined", scores = list(cvg.mat), anno = anno,
-         up = up, down = down, dist = dist, freq = freq, s.width = s.width)
+         up = up, down = down, dist = dist, freq = freq, s.width = s.width,
+         .samp.info = y)
 })
 
 setMethod(".featureScores", c("GRangesList", ".CoverageSamples"),
@@ -62,7 +63,7 @@ setMethod(".featureScores", c("GRangesList", ".CoverageSamples"),
 	names <- unname(sapply(scores, names))
     new("ScoresList", names = names, anno = anno, scores = unname(sapply(scores, tables)),
                             up = up, down = down, dist = dist, freq = freq,
-                            s.width = s.width)
+                            s.width = s.width, .samp.info = y)
 })
 
 setMethod(".featureScores", c("character", ".CoverageSamples"),
@@ -85,7 +86,7 @@ setMethod(".featureScores", c("character", ".CoverageSamples"),
 	names <- unname(sapply(scores, names))
     new("ScoresList", names = names, anno = anno, scores = unname(sapply(scores, tables)),
                             up = up, down = down, dist = dist, freq = freq,
-                            s.width = s.width)
+                            s.width = s.width, .samp.info = y)
 })
 
 setMethod(".featureScores", c(".SequencingData", "GRanges"),

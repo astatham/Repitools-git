@@ -206,7 +206,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	n.bins = length(cols)
 	image(y=seq(1/n.bins/2, 1-(1/n.bins/2), 1/n.bins), z=rbind(1:n.bins),
               col = cols, axes = FALSE, xlab = "Read Coverage", ylab = NA)
-	axis(2, at=c(0, 0.5, 1), labels = score.labels)
+	axis(2, at=c(0, 0.5, 1), labels = score.labels, las = 2)
 
 	par(mai=c(1.02,0.05,0.82,0.05))
         cl.sizes <- table(cl.id)[rev(cl.ord)]
@@ -259,8 +259,8 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
     if(!is.null(sort.data) && is.null(sort.name))
     	stop("'sort.data' provided, 'sort.name' is not.")
     if(!is.null(sort.data) && !is.null(expr) && length(expr) != length(sort.data))
-	stop("'sort.data' length not the same as number of features in coverage
-               matrices or expression data.\n")
+	stop("'sort.data' length not the same as number of features in coverage",
+             "matrices or expression data.\n")
 
     cvgs <- lapply(cvgs, scale)
     if(cap.type == "all") max.cvg <- quantile(abs(do.call(cbind, cvgs)), cap.q)

@@ -1,3 +1,13 @@
+# A collection of variables that describe where the sampling will happen.
+# An S4 class, so that they are created once, then dispatched on when
+# required for multiple samples.
+
+setClass(".CoverageSamples",
+         representation(
+                        pos.labels = "ANY", # character or numeric.
+                        cvg.samps = "GRanges"
+			))
+
 setClass("ScoresList", representation(
                                         names = "character",
 					scores = "list", # list of matrices.
@@ -6,7 +16,8 @@ setClass("ScoresList", representation(
 					down = "numeric",
 					dist = "ANY", # character or NULL.
 					freq = "numeric",
-					s.width = "ANY" # character or NULL.
+					s.width = "ANY", # character or NULL.
+                                        .samp.info = ".CoverageSamples"
 					))
 
 setMethod("names", "ScoresList", function(x) x@names)
@@ -41,7 +52,7 @@ setMethod("[", "ScoresList",
     {
 	new("ScoresList", names = x@names[i], anno = x@anno, scores = x@scores[i],
 	                  up = x@up, down = x@down, dist = x@dist,
-			  freq = x@freq, s.width = x@s.width[i])
+			  freq = x@freq, s.width = x@s.width[i], .samp.info = x@.samp.info)
     })
 
 setReplaceMethod("names", "ScoresList",
@@ -65,7 +76,7 @@ setMethod("subsetRows", "ScoresList",
     new("ScoresList", names = x@names, anno = x@anno[i],
                       scores = lapply(x@scores, function(y) y[i, ]),
                       up = x@up, down = x@down, dist = x@dist,
-                      freq = x@freq, s.width = x@s.width)
+                      freq = x@freq, s.width = x@s.width, .samp.info = x@.samp.info)
 })
 
 setClass("ClusteredCoverageList", representation(
@@ -112,7 +123,7 @@ setMethod("ClusteredCoverageList", "ScoresList",
 	    up = x@up, down = x@down, dist = x@dist,
 	    freq = x@freq, s.width = x@s.width, cluster.id = cluster.id,
 	    expr = expr, expr.name = expr.name, sort.data = sort.data,
-            sort.name = sort.name)
+            sort.name = sort.name, .samp.info = x@.samp.info)
 })
 
 setMethod("[", "ClusteredCoverageList",
@@ -122,7 +133,7 @@ setMethod("[", "ClusteredCoverageList",
 	anno = x@anno, up = x@up, down = x@down, dist = x@dist,
 	freq = x@freq, s.width = x@s.width[i], cluster.id = x@cluster.id,
 	expr = x@expr, expr.name = x@expr.name, sort.data = x@sort.data,
-        sort.name = x@sort.name)
+        sort.name = x@sort.name, .samp.info = x@.samp.info)
     })
 
 setMethod("subsetRows", "ClusteredCoverageList",
@@ -137,7 +148,7 @@ setMethod("subsetRows", "ClusteredCoverageList",
 	anno = x@anno[i], up = x@up, down = x@down, dist = x@dist,
 	freq = x@freq, s.width = x@s.width, cluster.id = x@cluster.id[i],
 	expr = x@expr[i], expr.name = x@expr.name, sort.data = x@sort.data[i],
-        sort.name = x@sort.name, .old.ranges = old.ranges)
+        sort.name = x@sort.name, .old.ranges = old.ranges, .samp.info = x@.samp.info)
 })
 
 setGeneric("clusters", function(x, ...)
@@ -147,16 +158,6 @@ setMethod("clusters", "ClusteredCoverageList",
 {
     x@cluster.id
 })
-
-# A collection of variables that describe where the sampling will happen.
-# An S4 class, so that they are created once, then dispatched on when
-# required for multiple samples.
-
-setClass(".CoverageSamples",
-         representation(
-                        pos.labels = "ANY", # character or numeric.
-                        cvg.samps = "GRanges"
-			))
 
 # container for output of regionStats()    
 setClass("RegionStats", representation("list"))
