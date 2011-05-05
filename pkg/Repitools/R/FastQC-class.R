@@ -69,7 +69,7 @@ readFastQC <- function(filename) {
                 colnames(tab) <- x[[1]]
                 tab
             })
-    do.call(new, c(list(Class="FastQC"), temp))
+    do.call(new, c(list(Class="FastQC"), temp[slotNames(getClass("FastQC"))]))
 }
 
 ##SequenceQC-class

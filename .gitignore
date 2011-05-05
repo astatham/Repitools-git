@@ -1,1 +1,6 @@
 pkg/Repitools.Rcheck
+vignette/*.pdf
+vignette/vignette.tex
+vignette/vignette.log
+vignette/vignette.aux
+vignette/vignette.out
