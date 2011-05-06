@@ -7,17 +7,14 @@ setMethod("genomeBlocks", "numeric",
         stop("Block width not given.")
 
     require(GenomicRanges)
-
-    chr.windows <- lapply(chrs, function(x)
-                          GRanges(seqnames = names(genome[x]),
-                                 ranges = IRanges(start = seq.int(spacing / 2,
-                                                                genome[x],
-                                                                spacing)
-                                                        - width / 2 + 1,
-                                                 end = seq.int(spacing / 2,
-                                                             genome[x],
-                                                             spacing)
-                                                      + width / 2)))
+    
+    chr.windows <- lapply(chrs, function(x) {
+      centres <- seq.int(min(spacing/2,genome[x]),genome[x],spacing)
+      GRanges(seqnames = names(genome[x]),
+              ranges = IRanges(start = pmax(centres-width/2+1,1), 
+                               end=pmin(centres+width/2, genome[x])))
+    })
+    
     suppressWarnings(do.call(c, chr.windows))
 })
 
