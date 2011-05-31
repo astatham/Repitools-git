@@ -1,13 +1,13 @@
-\name{ClusteredCoverageList}
+\name{ClusteredScoresList}
 \docType{class}
-\alias{ClusteredCoverageList}
-\alias{ClusteredCoverageList-class}
-\alias{ClusteredCoverageList,ScoresList-method}
-\alias{show,ClusteredCoverageList-method}
-\alias{[,ClusteredCoverageList-method}
-\alias{subsetRows,ClusteredCoverageList-method}
+\alias{ClusteredScoresList}
+\alias{ClusteredScoresList-class}
+\alias{ClusteredScoresList,ScoresList-method}
+\alias{show,ClusteredScoresList-method}
+\alias{[,ClusteredScoresList-method}
+\alias{subsetRows,ClusteredScoresList-method}
 \alias{clusters}
-\alias{clusters,ClusteredCoverageList-method}
+\alias{clusters,ClusteredScoresList-method}
 
 \title{Container for coverage matrices with clustering results.}
 \description{
@@ -23,9 +23,9 @@
 \section{Constructor}{
   \describe{
     \item{}{
-    	\code{ClusteredCoverageList(x, cvgs = tables(x), expr = NULL, expr.name = NULL,
+    	\code{ClusteredScoresList(x, cvgs = tables(x), expr = NULL, expr.name = NULL,
                                     cluster.id, sort.name = NULL, sort.data = NULL)}
-	Creates a ClusteredCoverageList object.
+	Creates a ClusteredScoresList object.
 	\describe{
 	    \item{\code{x}}{A \code{\linkS4class{ScoresList}} object.}
 	    \item{\code{scores}}{A list of coverage matrices.}
@@ -43,25 +43,25 @@
   }
 }
 \section{Subsetting}{
-  In the following code snippets, \code{x} is a ClusteredCoverageList object.
+  In the following code snippets, \code{x} is a ClusteredScoresList object.
 
   \describe{
     \item{}{
 	\code{x[i]}
-	Creates a ClusteredCoverageList object, keeping only the \code{i} matrices.
+	Creates a ClusteredScoresList object, keeping only the \code{i} matrices.
     }
     \item{}{
 	\code{subsetRows(x, i = NULL)}
-	Creates a ClusteredCoverageList object, keeping only the \code{i} features.
+	Creates a ClusteredScoresList object, keeping only the \code{i} features.
     }
     \item{}{
 	\code{clusters(x)}
-	Creates a ClusteredCoverageList object, keeping only the \code{i} features.
+	Creates a ClusteredScoresList object, keeping only the \code{i} features.
     }
   }
 }
 \section{Accessors}{
-  In the following code snippets, \code{x} is a ClusteredCoverageList object.
+  In the following code snippets, \code{x} is a ClusteredScoresList object.
 
   \describe{
     \item{}{

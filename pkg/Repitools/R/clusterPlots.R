@@ -1,8 +1,8 @@
 setGeneric("clusterPlots", function(c.list, ...){standardGeneric("clusterPlots")})
 
-setMethod("clusterPlots", "ClusteredCoverageList",
+setMethod("clusterPlots", "ClusteredScoresList",
 	function(c.list, plot.ord = 1:length(c.list), plot.type =
-                 c("heatmap", "line", "by.cluster"),
+                 c("heatmap", "line", "by.cluster"), heat.bg.col = "black",
                  summarize = c("mean", "median"), symm.scale = FALSE, cols = NULL,
                  t.name = NULL, verbose = TRUE, ...)
 {
@@ -25,15 +25,20 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 
     cvgs <- tables(c.list)
 
-
     # Get summary expression for each cluster. Find descending order.
     expr <- c.list@expr
     expr.name <- c.list@expr.name
     cl.id <- c.list@cluster.id
     cl.levels <- levels(factor(cl.id))
     n.clusters <- length(cl.levels)
+
+    keep <- !is.na(cl.id)
+    cvgs <- lapply(cvgs, function(x) x[keep, ])
+    cl.id <- cl.id[keep]
+
     if(!is.null(expr))
     {
+        expr <- expr[keep]
         if(summarize == "mean")
             cl.expr <- tapply(expr, factor(cl.id), mean, na.rm = TRUE)
         else
@@ -63,9 +68,9 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	for(i in 1:n.clusters)
 	    profiles[[i]] <- sapply(cvgs, function(x)
                                     if(summarize == "mean")
-                                        colMeans(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE])
+                                        colMeans(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE], na.rm = TRUE)
                                     else
-                                        apply(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE], 2, median)
+                                        apply(x[cl.id == cl.levels[cl.ord[i]], , drop = FALSE], 2, median, na.rm = TRUE)
                                    )
 
 	# Plot the lineplots by cluster.
@@ -88,7 +93,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                 cl.text <- paste("Cluster", cl.levels[y])
             }
 	    matplot(pos, x, ylim = c(y.min, y.max), type = 'l', col = cols,
-                    xlab = "Relative Position", ylab = "Read Coverage", yaxt = 'n',
+                    xlab = "Relative Position", ylab = "Score", yaxt = 'n',
                     xaxs = 'i', yaxs = 'i', ...)
 	    axis(2, at = c(y.min, (y.min + y.max) / 2, y.max), label = score.labels)
 
@@ -99,7 +104,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
         old.par <- par(no.readonly = TRUE)
         par(oma = c(5, 6, 5, 2), mar = c(0, 0, 0, 0), xpd = NA)
         if(is.null(c.list@.old.ranges))
-            ranges <- lapply(cvgs, range)
+            ranges <- lapply(cvgs, range, na.rm = TRUE)
         else
             ranges <- c.list@.old.ranges
 
@@ -108,9 +113,9 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                                lapply(cl.ord, function(y)
                                {
                                    if(summarize == "mean")
-                                       colMeans(x[cl.id == y, , drop = FALSE])
+                                       colMeans(x[cl.id == y, , drop = FALSE], na.rm = TRUE)
                                    else
-                                       apply(x[cl.id == y, , drop = FALSE], 2, function(z) median(z))
+                                       apply(x[cl.id == y, , drop = FALSE], 2, function(z) median(z), na.rm = TRUE)
                                })
                            })
 
@@ -134,8 +139,9 @@ setMethod("clusterPlots", "ClusteredCoverageList",
                 }
                 if(row.index == 1 && col.index == 1)
                 {
-                    axis(2, c(0, 0.5, 1), labels = score.labels, las = 2)
-                    mtext("Read Coverage", 2, 3)
+                    labels.ys <- par("usr")[3:4]
+                    axis(2, c(labels.ys[1], mean(labels.ys), labels.ys[2]), labels = score.labels, las = 2)
+                    mtext("Score", 2, 3)
                 }
                 if(row.index == 1)
                     title(names(c.list)[col.index], line = 2)
@@ -169,14 +175,14 @@ setMethod("clusterPlots", "ClusteredCoverageList",
         par(old.par)
     } else { # Plot a heatmap.
         if(is.null(c.list@.old.ranges))
-            ranges <- lapply(cvgs, range)
+            ranges <- lapply(cvgs, range, na.rm = TRUE)
         else
             ranges <- c.list@.old.ranges
 
         plot.ranges <- lapply(ranges, function(x)
                                       {
                                          if(symm.scale)
-                                             c(-1,1)*max(abs(x))
+                                             c(-1, 1) * max(abs(x))
                                          else
                                              range(x)
                                       })
@@ -205,7 +211,7 @@ setMethod("clusterPlots", "ClusteredCoverageList",
   	
 	n.bins = length(cols)
 	image(y=seq(1/n.bins/2, 1-(1/n.bins/2), 1/n.bins), z=rbind(1:n.bins),
-              col = cols, axes = FALSE, xlab = "Read Coverage", ylab = NA)
+              col = cols, axes = FALSE, xlab = "Score", ylab = NA)
 	axis(2, at=c(0, 0.5, 1), labels = score.labels, las = 2)
 
 	par(mai=c(1.02,0.05,0.82,0.05))
@@ -215,7 +221,10 @@ setMethod("clusterPlots", "ClusteredCoverageList",
 	{
 	    image(pos, 1:nrow(x), t(x), zlim = z, xlab = "Relative Position",
                   xaxt = 'n', yaxt = 'n', col = cols, main = y)
-	    axis(1, pos, labels = pos.labels)		
+            usr <- par("usr")
+            rect(usr[1], usr[3], usr[2], usr[4], col = heat.bg.col)
+	    image(pos, 1:nrow(x), t(x), zlim = z, xaxt = 'n', yaxt = 'n', col = cols, add = TRUE)
+            axis(1, pos, labels = pos.labels)		
 
 	    # Add lines delimiting the cluster boundaries.
 	    abline(h = bounds[-n.clusters], lwd = 3)
@@ -246,6 +255,8 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
           summarize = c("mean", "median"), cols = NULL, t.name = NULL,
           verbose = TRUE, ...)
 {
+    require(cluster)
+    
     c.list <- c.list[plot.ord]
     plot.type <- match.arg(plot.type)
     cap.type <- match.arg(cap.type)
@@ -262,14 +273,19 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
 	stop("'sort.data' length not the same as number of features in coverage",
              "matrices or expression data.\n")
 
+    # Get rid of any rows that have 1/2 NAs or more.
+    rows.na <- apply(cvgs[[1]], 1, function(x) length(which(is.na(x))))
+    drop <- rows.na >= ncol(cvgs[[1]]) / 2
+    
     cvgs <- lapply(cvgs, scale)
-    if(cap.type == "all") max.cvg <- quantile(abs(do.call(cbind, cvgs)), cap.q)
+    if(cap.type == "all") max.cvg <- quantile(abs(do.call(cbind, cvgs)), cap.q,
+                                              na.rm = TRUE)
 
     # Find the maximum score allowable, then make any scores bigger be the
     # maximum score.
     cvgs <- lapply(cvgs, function(x)
     {
-        if(cap.type == "sep") max.cvg <- quantile(abs(x), cap.q)
+        if(cap.type == "sep") max.cvg <- quantile(abs(x), cap.q, na.rm = TRUE)
         x[x > max.cvg] = max.cvg
         x[x < -max.cvg] = -max.cvg
         x / max.cvg
@@ -277,9 +293,10 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
 
     # Do the k-means clustering for all marks together.
     set.seed(100)
-    if(verbose) message("Doing k-means clustering.")
-    all <- do.call(cbind, cvgs)
-    cl.id <- kmeans(all, n.clusters, iter.max = 100)$cluster
+    if(verbose) message("Doing PAM clustering.")
+    cl.id <- rep(NA, length(c.list@anno))
+    all <- do.call(cbind, cvgs)[!drop, ]
+    cl.id[!drop] <- pam(all, n.clusters, cluster.only = TRUE, do.swap = FALSE)
 
     # Make sure order of IDs correspond to increasing expression, if present.
     if(!is.null(expr))
@@ -292,10 +309,10 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
         cl.id <- sapply(cl.id, function(x) match(x, cl.ord))
     }
 
-    ccl <- ClusteredCoverageList(c.list, scores = cvgs, cluster.id = cl.id,
+    csl <- ClusteredScoresList(c.list, scores = cvgs, cluster.id = cl.id,
                                  expr = expr, expr.name = expr.name,
                                  sort.data = sort.data, sort.name = sort.name)
-    clusterPlots(ccl, plot.type = plot.type, summarize = summarize, cols = cols,
+    clusterPlots(csl, plot.type = plot.type, summarize = summarize, cols = cols,
                  t.name = t.name, verbose = verbose, ...)
-    invisible(ccl)
+    invisible(csl)
 })

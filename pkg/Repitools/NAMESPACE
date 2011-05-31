@@ -2,6 +2,6 @@
 
 #  All functions exported other than those starting with "."
 import(methods, BSgenome, IRanges, GenomicRanges)
-exportClasses(FastQC, SequenceQC, SequenceQCSet, ScoresList, ClusteredCoverageList)
+exportClasses(FastQC, SequenceQC, SequenceQCSet, ScoresList, ClusteredScoresList)
 exportMethods(show)
 exportPattern("^[^\\.]")

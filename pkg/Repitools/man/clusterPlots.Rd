@@ -1,6 +1,6 @@
 \name{clusterPlots}
 \alias{clusterPlots}
-\alias{clusterPlots,ClusteredCoverageList-method}
+\alias{clusterPlots,ClusteredScoresList-method}
 \alias{clusterPlots,ScoresList-method}
 
 \title{Visualisation of tables of feature coverages.}
@@ -9,9 +9,9 @@
   and plots a heatmaps or lineplots representation of clustered coverages.
 }
 \usage{
-  \S4method{clusterPlots}{ClusteredCoverageList}(
+  \S4method{clusterPlots}{ClusteredScoresList}(
      c.list, plot.ord = 1:length(c.list), plot.type = c("heatmap", "line", "by.cluster"),
-     summarize = c("mean", "median"), symm.scale = FALSE, cols = NULL, t.name = NULL,
+     heat.bg.col = "black", summarize = c("mean", "median"), symm.scale = FALSE, cols = NULL, t.name = NULL,
      verbose = TRUE, ...)
   \S4method{clusterPlots}{ScoresList}(c.list, scale = function(x) x,
     cap.q = 0.95, cap.type = c("sep", "all"), n.clusters = NULL,
@@ -20,7 +20,7 @@
     summarize = c("mean", "median"), cols = NULL, t.name = NULL, verbose = TRUE, ...)
 }
 \arguments{
-  \item{c.list}{A \linkS4class{ScoresList} or \linkS4class{ClusteredCoverageList}
+  \item{c.list}{A \linkS4class{ScoresList} or \linkS4class{ClusteredScoresList}
                 object.}
   \item{scale}{A function to scale all the coverages by. Default : No scaling.}
   \item{cap.q}{The quantile of coverages above which to make any bigger coverages
@@ -35,6 +35,8 @@
   \item{sort.data}{A vector of values to sort the features within a cluster on.}
   \item{sort.name}{Label to place under the \code{sort.data} plot.}
   \item{plot.type}{Style of plot to draw.}
+  \item{heat.bg.col}{If a heatmap is being drawn, the background colour to plot NA
+                     values with.}
   \item{summarize}{How to summarise the score columns of each cluster. Not relevant
                   for heatmap plot.}
   \item{symm.scale}{Whether to make lineplot y-axis or heatmap intensity centred
@@ -50,11 +52,11 @@
              the line styles.}
 }
 \value{
-  If called with a \code{ScoresList}, then a \code{ClusteredCoverageList} is
-  returned. If called with a \code{ClusteredCoverageList}, then nothing is returned.
+  If called with a \code{ScoresList}, then a \code{ClusteredScoresList} is
+  returned. If called with a \code{ClusteredScoresList}, then nothing is returned.
 }
 \details{
-  A \code{ClusteredCoverageList} should be created by the user, if they wish to do
+  A \code{ClusteredScoresList} should be created by the user, if they wish to do
   some custom clustering and normalisation on the coverage matrices. Otherwise, if
   the user is happy with k-means clustering, then the \code{ScoresList} object as output
   by \code{featureScores()} can be directly used. If called with a \code{ScoresList},
@@ -63,13 +65,13 @@
   Then each matrix is divided by its maximum value, so that the Euclidean distance
   between maximum reads and no reads is the same for each matrix. Lastly, k-means
   clustering is performed to get the cluster membership of each feature. Then a
-  \code{ClusteredCoverageList} object is created, and used. The clusters are
+  \code{ClusteredScoresList} object is created, and used. The clusters are
   guaranteed to be given IDs in descending order of summarised cluster expression, if it
-  is provided. If called with a \code{ClusteredCoverageList}, no scaling or capping
+  is provided. If called with a \code{ClusteredScoresList}, no scaling or capping
   is done, so it is the user's responsibility to normalise the coverage matrices as
-  they see fit, when creating the \code{ClusteredCoverageList} object.
+  they see fit, when creating the \code{ClusteredScoresList} object.
 
-  If a \code{ClusteredCoverageList} object is subsetted, the original data range is
+  If a \code{ClusteredScoresList} object is subsetted, the original data range is
   saved in a private slot, so that if the user wants to plot a subset of the features,
   such as a certain cluster, for example, the intensity range of the heatmap,
   or the y-axis range of the lineplot will be the same as before subsetting.
@@ -94,11 +96,11 @@
   reason, sending the output to a PDF device is necessary. It is recommended to make
   the width of the PDF device wider than the default. Since the coverage data between
   different marks is not comparable, this method is inappropriate for visualising a
-  \code{ClusteredCoverageList} object if it was created by the clusterPlots scoresList
+  \code{ClusteredScoresList} object if it was created by the clusterPlots scoresList
   method. If the user, however, can come up with a normalisation method to account
   for the differences that are apparent between different types (i.e. peaked vs.
   spread) of marks that makes the coverages meaningfully comparable, they can alter
-  the tables, do their own clustering, and create a \code{ClusteredCoverageList}
+  the tables, do their own clustering, and create a \code{ClusteredScoresList}
   object with the modified tables.
 }
 \seealso{\code{\link{featureScores}} for generating coverage matrices.}

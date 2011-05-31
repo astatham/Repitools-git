@@ -169,12 +169,12 @@ setMethod(".featureScores", c("matrix", "GRanges"),
 })
 
 setMethod(".featureScores", c("AffymetrixCelSet", "GRanges"),
-    function(x, y, p.anno = NULL, mapping = NULL, ...)
+    function(x, y, p.anno = NULL, mapping = NULL, chrs = NULL, ...)
 {
     require(aroma.affymetrix)
 
     if(is.null(mapping) && is.null(p.anno))
-        p.anno <- getProbePositionsDf(getCdf(x), verbose = verbose)
+        p.anno <- getProbePositionsDf(getCdf(x), chrs, verbose = verbose)
 
     intens <- extractMatrix(x, cells = p.anno$index, verbose = verbose)
     p.anno$index <- 1:nrow(p.anno)
@@ -183,7 +183,7 @@ setMethod(".featureScores", c("AffymetrixCelSet", "GRanges"),
 })
 
 setMethod("featureScores", c("ANY", "GRanges"), function(x, anno,
-           up, down, ...)
+           up = NULL, down = NULL, ...)
 {
     invisible(.validate(anno, up, down))
     .featureScores(x, anno, up = up, down = down, ...)

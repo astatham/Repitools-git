@@ -79,7 +79,7 @@ setMethod("subsetRows", "ScoresList",
                       freq = x@freq, s.width = x@s.width, .samp.info = x@.samp.info)
 })
 
-setClass("ClusteredCoverageList", representation(
+setClass("ClusteredScoresList", representation(
                                     cluster.id = "numeric",
 				    expr = "ANY",
                                     expr.name = "ANY",
@@ -88,11 +88,11 @@ setClass("ClusteredCoverageList", representation(
                                     .old.ranges = "ANY"),
                        contains = "ScoresList")
 
-setMethod("show", "ClusteredCoverageList",
+setMethod("show", "ClusteredScoresList",
     function(object)
     {
 	dist.label <- ifelse(object@dist == "percent", '%', "bases")
-	cat("An object of class 'ClusteredCoverageList'.\n")
+	cat("An object of class 'ClusteredScoresList'.\n")
 	cat("Tables: ", paste(object@names, collapse = ", "), ".\n", sep = '')
 	cat("Region: ",  paste(object@up, dist.label, "up to", object@down,
 	    dist.label, "down.\n"))
@@ -113,37 +113,37 @@ setMethod("show", "ClusteredCoverageList",
     })
 
 # Constructor
-setGeneric("ClusteredCoverageList", function(x, ...)
-           {standardGeneric("ClusteredCoverageList")})
-setMethod("ClusteredCoverageList", "ScoresList",
+setGeneric("ClusteredScoresList", function(x, ...)
+           {standardGeneric("ClusteredScoresList")})
+setMethod("ClusteredScoresList", "ScoresList",
     function(x, scores = tables(x), expr = NULL, expr.name = NULL, cluster.id, sort.data = NULL,
              sort.name = NULL)
 {
-	new("ClusteredCoverageList", names = x@names, scores = scores, anno = x@anno,
+	new("ClusteredScoresList", names = x@names, scores = scores, anno = x@anno,
 	    up = x@up, down = x@down, dist = x@dist,
 	    freq = x@freq, s.width = x@s.width, cluster.id = cluster.id,
 	    expr = expr, expr.name = expr.name, sort.data = sort.data,
             sort.name = sort.name, .samp.info = x@.samp.info)
 })
 
-setMethod("[", "ClusteredCoverageList",
+setMethod("[", "ClusteredScoresList",
     function(x, i)
 {
-    new("ClusteredCoverageList", names = x@names[i], scores = x@scores[i],
+    new("ClusteredScoresList", names = x@names[i], scores = x@scores[i],
 	anno = x@anno, up = x@up, down = x@down, dist = x@dist,
 	freq = x@freq, s.width = x@s.width[i], cluster.id = x@cluster.id,
 	expr = x@expr, expr.name = x@expr.name, sort.data = x@sort.data,
         sort.name = x@sort.name, .samp.info = x@.samp.info)
     })
 
-setMethod("subsetRows", "ClusteredCoverageList",
+setMethod("subsetRows", "ClusteredScoresList",
     function(x, i = NULL)
 {
     if(is.null(i))
         stop("No row indices given to subset by.")
 
     old.ranges <- lapply(x@scores, range)
-    new("ClusteredCoverageList", names = x@names,
+    new("ClusteredScoresList", names = x@names,
         scores = lapply(x@scores, function(y) y[i, ]),
 	anno = x@anno[i], up = x@up, down = x@down, dist = x@dist,
 	freq = x@freq, s.width = x@s.width, cluster.id = x@cluster.id[i],
@@ -153,7 +153,7 @@ setMethod("subsetRows", "ClusteredCoverageList",
 
 setGeneric("clusters", function(x, ...)
            {standardGeneric("clusters")})
-setMethod("clusters", "ClusteredCoverageList",
+setMethod("clusters", "ClusteredScoresList",
     function(x)
 {
     x@cluster.id
