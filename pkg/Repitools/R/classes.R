@@ -98,7 +98,8 @@ setMethod("show", "ClusteredScoresList",
 	    dist.label, "down.\n"))
 	cat("Features:\n")
 	print(object@anno)
-	cat("Smoothing:", paste(object@s.width, collapse = ", "), "bases.\n")
+        if(!is.null(object@s.width))
+	    cat("Smoothing:", paste(object@s.width, collapse = ", "), "bases.\n")
 	cat("Sampling: ", object@freq, ' ', dist.label, ".\n",  sep = '')
         if(!is.null(object@expr))
             cat("Feature Expressions:", object@expr.name,

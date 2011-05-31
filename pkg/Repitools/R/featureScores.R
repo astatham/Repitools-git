@@ -164,7 +164,7 @@ setMethod(".featureScores", c("matrix", "GRanges"),
                      })    
 
     new("ScoresList", names = colnames(x), anno = y, scores = points.intens,
-                            up = up, down = down, dist = NULL, freq = freq,
+                            up = up, down = down, dist = "base", freq = freq,
                             s.width = NULL)
 })
 

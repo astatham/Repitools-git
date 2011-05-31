@@ -166,6 +166,27 @@ stats.clustered[cluster.1, ]
 
 \noindent In this example, a running window of 5 consecutive genes is calculated along each chromosome; the median value of those 5 genes is assigned to the middle gene. If, in the 5-gene window, there are at least 2 genes that have an assigned median above the cutoff being used (cutoffs of -2, -4, -6, -8, and -10 are tried), then those genes are candidate cluster-generating genes. Starting from a candidate gene, and working outwards until encountering a positive t-statistic, if a consecutive run of at least 3 genes with t-statistic being negative could be made, then this forms a cluster. The default estimated FDR of 0.05 is used.
 
+\subsection{Finding enriched regions in a single sample}
+Repitools contains an implementation of \texttt{ChromaBlocks} (described in \href{http://www.ncbi.nlm.nih.gov/pubmed/20452322}{Hawkins RD et al}), designed to discover regions of the genome which are enriched for epigenetic marks, such as H3K27me3.  Briefly, ChromaBlocks counts the number of sequencing reads aligned to adjacent bins in the genome in both Immunoprecipitated and Input samples, determines which bins exceed a cutoff for IP-Input enrichment (either specified or set at a supplied FDR by permutation) and returns regions of the genome where multiple adjacent bins are enriched.
+
+\noindent Data from the Human Reference Epigenome Mapping Project is used to demonstrate \texttt{ChromaBlocks}. The data was downloaded from \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE16256}{here}. Samples \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466734}{GSM466734}, \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466737}{GSM466737}, \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466739}{GSM466739}, and \href{http://www.ncbi.nlm.nih.gov/projects/geo/query/acc.cgi?acc=GSM450270}{GSM450270} are used here.
+
+<<ChromaBlocks1>>=
+load("H1samples.RData")
+class(H1samples)
+names(H1samples)
+elementLengths(H1samples)
+
+H3K27me3.blocks <- ChromaBlocks(rs.ip=H1samples["H3K27me3"], rs.input=H1samples["Input"], organism=Hsapiens, chrs="chr20", preset="small", seq.len=300)
+@
+
+\texttt{ChromaBlocks} returns a \texttt{ChromaResults} object, from which an \texttt{IRangesList} of the regions determined to be enriched can be retrieved using the \texttt{regions} method.
+
+<<ChromaBlocks2>>=
+H3K27me3.blocks
+regions(H3K27me3.blocks)
+@
+
 \section{Visualisations}
 
 \subsection{Integrative analysis of epigenetics and gene expression}
@@ -207,15 +228,8 @@ profilePlots(samples.list, anno = gene.anno, up = 7500, down = 2500,
 \subsection{Clustering epigenomic signals}
 
 \texttt{clusterPlots} is another way to look at read depth at regular positions around a feature (e.g. TSS). The first step is to use \texttt{featureScores} to get the coverage tables, which essentially gives a list of coverage tables for the samples used. \texttt{clusterPlots} is then called, which does k-means clustering, or if the user wants to use their own clustering algorithm, the cluster ID of each feature can be passed in. In any case, the features are grouped by their cluster memberships and plotted as either a heatmap with one row for every feature, or a set of lineplots showing the average coverage of all features belonging to each cluster. If gene expression data is also available, it can be plotted alongside the heatmaps.
-\ \\ \ \\
-
-Data from the Human Reference Epigenome Mapping Project is used to demonstrate this visualisation. The data was downloaded from \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE16256}{here}. Samples \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466734}{GSM466734}, \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466737}{GSM466737}, and \href{http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM466739}{GSM466739} are used.
 
 <<label=cluPlots>>=
-load("H1samples.RData")
-class(H1samples)
-names(H1samples)
-elementLengths(H1samples)
 cvgs <- featureScores(H1samples, gene.anno, up = 5000, down = 2000, dist = "base",
                       freq = 200, s.width = 500)
 @
@@ -225,7 +239,7 @@ png("clusterPlot.png", height = 1000, width = 2500, pointsize = 22)
 @
 
 <<label=cluPlots3>>=
-cp <- clusterPlots(cvgs, scale=function(x) sqrt(x), plot.type = "heatmap",
+cp <- clusterPlots(cvgs[1:3], scale=function(x) sqrt(x), plot.type = "heatmap",
              t.name = "H1 Cells", n.clusters=10)
 @
 
@@ -249,7 +263,6 @@ clusterPlots(cp, plot.type = "line", t.name = "H1 Cells")
 @
 
 Also, this allows users to do there own clustering and use \texttt{clusterPlots} for the plotting, or to extract the cluster identifiers for downstream analyses (e.g. functional category analysis).  Furthermore, in addition to specifying a vector of expression values and plotting it alongside the clustered epigenetic signal, users can give an additional vector in the \texttt{sort.data} argument to sort on within a cluster (e.g. gene length, CpG density, etc.).
-
 
 \section{Utility Functions}
 

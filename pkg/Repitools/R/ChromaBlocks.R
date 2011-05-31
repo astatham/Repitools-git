@@ -1,6 +1,6 @@
 setGeneric("ChromaBlocks", function(rs.ip, rs.input, ...){standardGeneric("ChromaBlocks")})
 
-setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.input, organism, chrs, ipWidth=100, inputWidth=500, preset=NULL, blockWidth=NULL, minBlocks=NULL, extend=NULL, cutoff=NULL, FDR=0.01, nPermutations=5, nCutoffs=20, cutoffQuantile=0.98, verbose=TRUE, seqLen=NULL) {
+setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.input, organism, chrs, ipWidth=100, inputWidth=500, preset=NULL, blockWidth=NULL, minBlocks=NULL, extend=NULL, cutoff=NULL, FDR=0.01, nPermutations=5, nCutoffs=20, cutoffQuantile=0.98, verbose=TRUE, seq.len=NULL) {
 
     .mergeOverlaps <- function (query, subject) {
         ov <- matchMatrix(findOverlaps(query, subject, select="all"))
@@ -46,26 +46,28 @@ setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.in
     }
 
     
-    if (preset=="small") {
+    if (is.null(preset)) {
+        stopifnot(!is.null(blockWidth), !is.null(minBlocks))
+    } else if (preset=="small") {
         blockWidth=10
         minBlocks=5
     } else if (preset=="large") {
         blockWidth=50
         minBlocks=25
         extend=0.1
-    } else stopifnot(!is.null(blockWidth), !is.null(minBlocks))
-    if (verbose) cat("Creating bins\n")
+    } 
+    if (verbose) message("Creating bins\n")
     IPbins <- genomeBlocks(organism, chrs, ipWidth)
     InputBins <- genomeBlocks(organism, chrs, inputWidth, ipWidth)
-    if (verbose) cat("Counting IP lanes: ")
+    if (verbose) message("Counting IP lanes")
     force(rs.ip)
     force(rs.input)
-    ipCounts <- annotationBlocksCounts(rs.ip, IPbins, seqLen=seqLen, verbose=verbose)
+    ipCounts <- annotationBlocksCounts(rs.ip, IPbins, seq.len=seq.len, verbose=verbose)
     #pool & normalise IP lanes & turn into RPKM - reads per kb (ipWidth/1000) per million (/lanecounts*1000000)
     ipCounts <- rowSums(ipCounts)/sum(elementLengths(rs.ip))*1000000/(ipWidth/1000)
     
-    if (verbose) cat("Counting Input lanes: ")
-    inputCounts <- annotationBlocksCounts(rs.input, InputBins, seqLen=seqLen, verbose=verbose)
+    if (verbose) message("Counting Input lanes")
+    inputCounts <- annotationBlocksCounts(rs.input, InputBins, seq.len=seq.len, verbose=verbose)
     #pool & normalise Input lanes
     inputCounts <- rowSums(inputCounts)/sum(elementLengths(rs.input))*1000000/(inputWidth/1000)
     
