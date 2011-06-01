@@ -1,46 +1,39 @@
 \name{profilePlots}
 \alias{profilePlots}
-\alias{profilePlots,GRangesList-method}
-\alias{profilePlots,AffymetrixCelSet-method}
-\alias{profilePlots,matrix-method}
-\title{Create line plots of averaged signal across a promoter compared to random sampling}
+\alias{profilePlots,ScoresList-method}
+\title{Create line plots of averaged signal across a promoter for gene sets, compared to
+       random sampling.}
 \description{
-Creates a plot where the average signal across a promoter of supplied gene lists is compared to random samplings of all genes, with a shaded confidence area.
+  Creates a plot where the average signal across a promoter of supplied gene lists is
+  compared to random samplings of all genes, with a shaded confidence area.
 }
 \usage{
-  \S4method{profilePlots}{GRangesList}(x, anno, design=NULL, up=7500, down=2500, by=100, bw=300, total.lib.size=TRUE, seq.len=NULL, verbose=FALSE, ...)
-  \S4method{profilePlots}{AffymetrixCelSet}(x, probe.map=NULL, anno=NULL, up=7500, down=2500, by=100, bw=300, log2.adj=TRUE, verbose=FALSE, ...)
-  \S4method{profilePlots}{matrix}(x, lookup.table, gene.list, titles, n.samples=1000, confidence=0.975, legend.plot="topleft", cols=rainbow(length(gene.list)), remove.zeros=TRUE, use.mean=FALSE, ...)
+  \S4method{profilePlots}{ScoresList}(x, summarize = c("mean", "median"), gene.lists,
+   n.samples = 1000, confidence = 0.975, legend.plot = "topleft", cols = rainbow(length(gene.lists)),
+   verbose = TRUE, ...)
 }
 \arguments{
-  \item{x}{A \code{GRangesList} of sequencing data, or \code{matrix} or \code{AffymetrixCelSet} of array data, to use.}
-  \item{probe.map}{A pre-made mapping of probes to a anno}
-  \item{lookup.table}{\code{matrix}, e.g. from \code{makeWindowLookupTable}}
-  \item{design}{Optional for GDL data - design matrix specifying the contrast to compute (i.e. the samples to use and what differences to take)}
-  \item{gene.list}{Names \code{list} of \code{logical} or \code{integer} vectors, specifying the genes to be averaged and plotted}
-  \item{titles}{\code{character} vector of titles for the plots}
-  \item{n.samples}{number of times to randomly sample from all genes}
-  \item{confidence}{percentage confidence interval to be plotted (must be > 0.5 and < 1.0}
-  \item{legend.plot}{Where to plot the legend - directly passed to \code{legend}. NA suppresses the legend}
-  \item{cols}{the colour for each of the genelists supplied}
-  \item{remove.zeros}{Remove zero values.}
-  \item{use.mean}{Whether to use mean instead of median within gene lists (useful for seq data).}  
-  \item{anno}{\code{data.frame} giving the gene coordinates or regions of interest. The column names of this are \code{chr}, \code{position}, \code{strand}}
-  \item{up}{number of bases upstream to plot}
-  \item{down}{number of bases upstream to plot}
-  \item{by}{how many bases between data points}
-  \item{bw}{how many bases up and downstream to be counted}
-  \item{total.lib.size}{whether to use the total number of sequencing reads per lane to normalise.}
-  \item{seq.len}{If sequencing reads need to be extended, the fragment size to be used}
-  \item{log2.adj}{whether to take log2 of array intensities.}
-  \item{verbose}{Print details of processing.}
-  \item{...}{arguments passed from the other methods into the \code{matrix} method.}
+  \item{x}{A \code{\linkS4class{ScoresList}} object. See \code{\link{featureScores}}.}
+  \item{summarize}{How to summarise the scores for each bin into a single value.}
+  \item{gene.lists}{Named \code{list} of \code{logical} or \code{integer} vectors, specifying
+                    the genes to be averaged and plotted.}
+  \item{n.samples}{The number of times to randomly sample from all genes.}
+  \item{confidence}{A percentage confidence interval to be plotted (must be > 0.5 and < 1.0).}
+  \item{legend.plot}{Where to plot the legend - directly passed to \code{\link{legend}}.
+                     NA suppresses the legend.}
+  \item{cols}{The colour for each of the genelists supplied.}
+  \item{verbose}{Whether to print details of processing.}
+  \item{...}{Extra arguments to \code{matplot}, like x- and y-limits, perhaps.}
 }
 \details{
-For each column of data in \code{dataMatrix} a plot is created showing the average signal of the genes specified in each list element of \code{gene.list} compared to \code{n.samples} random samplings of all genes, with \code{confidence} \% intervals shaded. If an element of \code{gene.list} is a \code{logical} vector, its length must be the same as the number of rows in \code{lookup.table}.
+  For each table of scores in \code{x}, a plot is created showing the average signal of
+  the genes specified in each list element of \code{gene.lists} compared to \code{n.samples}
+  random samplings of all genes, with \code{confidence} \% intervals shaded. If an element
+  of \code{gene.lists} is a \code{logical} vector, its length must be the same as
+  the number of rows of the score tables.
 }
 \value{
-  A plot.
+  A series of plots.
 }
 \author{Aaron Statham}
 \examples{

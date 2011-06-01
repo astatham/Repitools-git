@@ -58,9 +58,6 @@ setMethod("[", "ScoresList",
 setReplaceMethod("names", "ScoresList",
     function(x, value)
     {
-	if(length(value) != length(x@names))
-	    stop("New mark name(s) are a different length to previous mark
-                  name(s).\n")
 	x@names <- value
 	x
     }
@@ -143,7 +140,7 @@ setMethod("subsetRows", "ClusteredScoresList",
     if(is.null(i))
         stop("No row indices given to subset by.")
 
-    old.ranges <- lapply(x@scores, range)
+    old.ranges <- lapply(x@scores, range, na.rm = TRUE)
     new("ClusteredScoresList", names = x@names,
         scores = lapply(x@scores, function(y) y[i, ]),
 	anno = x@anno[i], up = x@up, down = x@down, dist = x@dist,
