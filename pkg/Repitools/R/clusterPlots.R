@@ -291,12 +291,19 @@ setMethod("clusterPlots", "ScoresList", function(c.list, scale = function(x) x,
         x / max.cvg
     })
 
-    # Do the k-means clustering for all marks together.
-    set.seed(100)
-    if(verbose) message("Doing PAM clustering.")
-    cl.id <- rep(NA, length(c.list@anno))
+    # Do the some kind of clustering for all marks together.
     all <- do.call(cbind, cvgs)[!drop, ]
-    cl.id[!drop] <- pam(all, n.clusters, cluster.only = TRUE, do.swap = FALSE)
+    any.na <- any(is.na(all))
+    set.seed(100)
+    if(any.na)
+    {
+        if(verbose) message("Doing PAM clustering.")
+        cl.id <- rep(NA, length(c.list@anno))
+        cl.id[!drop] <- pam(all, n.clusters, cluster.only = TRUE, do.swap = FALSE)
+    } else { # No NAs in the data. Use k-means for speed.
+        if(verbose) message("Doing k-means clustering.")
+        cl.id <- kmeans(all, n.clusters, iter.max = 100)$cluster
+    }
 
     # Make sure order of IDs correspond to increasing expression, if present.
     if(!is.null(expr))

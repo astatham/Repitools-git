@@ -58,13 +58,14 @@
 \details{
   A \code{ClusteredScoresList} should be created by the user, if they wish to do
   some custom clustering and normalisation on the coverage matrices. Otherwise, if
-  the user is happy with k-means clustering, then the \code{ScoresList} object as output
-  by \code{featureScores()} can be directly used. If called with a \code{ScoresList},
+  the user is happy with k-means or PAM clustering, then the \code{ScoresList} object as
+  output by \code{featureScores()} can be directly used. If called with a \code{ScoresList},
   then the matrices for each coverage type are joined. Then the function supplied by
   the \code{scale} argument is used to scale the data. Next, each matrix is capped.
   Then each matrix is divided by its maximum value, so that the Euclidean distance
-  between maximum reads and no reads is the same for each matrix. Lastly, k-means
-  clustering is performed to get the cluster membership of each feature. Then a
+  between maximum reads and no reads is the same for each matrix. Lastly, either k-means
+  or PAM clustering is performed to get the cluster membership of each feature. If there are any
+  NAs in the scores, then PAM will be used. Otherwise, k-means is used for speed. Then, a
   \code{ClusteredScoresList} object is created, and used. The clusters are
   guaranteed to be given IDs in descending order of summarised cluster expression, if it
   is provided. If called with a \code{ClusteredScoresList}, no scaling or capping
