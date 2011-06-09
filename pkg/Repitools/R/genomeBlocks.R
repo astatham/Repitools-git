@@ -27,5 +27,5 @@ setMethod("genomeBlocks", "BSgenome",
     require(BSgenome)
     
     chr.lengths <- seqlengths(genome)[chrs]
-    genomeBlocks(chr.lengths, chrs = chrs, width = width, spacing = spacing)
+    genomeBlocks(chr.lengths, chrs = names(chr.lengths), width = width, spacing = spacing)
 })
