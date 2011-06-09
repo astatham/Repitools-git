@@ -1,0 +1,16 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}
+\BOOKMARK [1][-]{section.2}{Example Datasets}{}
+\BOOKMARK [1][-]{section.3}{Quality Checking}{}
+\BOOKMARK [1][-]{section.4}{Analyses}{}
+\BOOKMARK [2][-]{subsection.4.1}{Statistics of Differential Enrichment}{section.4}
+\BOOKMARK [2][-]{subsection.4.2}{Domains of Concordant Change}{section.4}
+\BOOKMARK [2][-]{subsection.4.3}{Finding enriched regions in a single sample}{section.4}
+\BOOKMARK [1][-]{section.5}{Visualisations}{}
+\BOOKMARK [2][-]{subsection.5.1}{Integrative analysis of epigenetics and gene expression}{section.5}
+\BOOKMARK [2][-]{subsection.5.2}{Gene Set Enrichment}{section.5}
+\BOOKMARK [2][-]{subsection.5.3}{Clustering epigenomic signals}{section.5}
+\BOOKMARK [1][-]{section.6}{Utility Functions}{}
+\BOOKMARK [2][-]{subsection.6.1}{Windows and Counts}{section.6}
+\BOOKMARK [2][-]{subsection.6.2}{Characteristics of the DNA sequence}{section.6}
+\BOOKMARK [1][-]{section.7}{Summary}{}
+\BOOKMARK [1][-]{section.8}{Environment}{}
