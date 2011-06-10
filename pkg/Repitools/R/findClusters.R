@@ -5,7 +5,7 @@
 
     mergeOverlaps <- function(query, subject)
     {
-        candidates <- IRanges(slice(coverage(c(query, subject)), lower = 1))
+        candidates <- slice(coverage(c(query, subject)), lower = 1, rangesOnly = TRUE)
         candidates[countOverlaps(candidates, query) > 0]
     }
 
