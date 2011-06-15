@@ -39,13 +39,12 @@ setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.in
             if (length(cutoffs)>1) sapply(cutoffs, function(x) callCutoff(dat, x)) else callCutoff(dat, cutoffs)
         }
         
-        RPKM.split <- GenomeData(split(data.frame(position=(start(bins)+end(bins))/2, RPKM=if (is.null(RPKM)) values(bins)$RPKM else RPKM), as.character(seqnames(bins))))
-        regions <- lapply(RPKM.split, callChr)
+        RPKM.split <- split(data.frame(position=(start(bins)+end(bins))/2, RPKM=if (is.null(RPKM)) values(bins)$RPKM else RPKM), as.character(seqnames(bins)))
+        if ("multicore" %in% .packages()) regions <- mclapply(RPKM.split, callChr) else regions <- lapply(RPKM.split, callChr)
         if (verbose) cat("\n")
         if (length(cutoffs)>1) rowSums(sapply(regions, function(x) sapply(x,length))) else RangesList(regions)
     }
 
-    
     if (is.null(preset)) {
         stopifnot(!is.null(blockWidth), !is.null(minBlocks))
     } else if (preset=="small") {
@@ -56,7 +55,7 @@ setMethod("ChromaBlocks", c("GRangesList", "GRangesList"), function(rs.ip, rs.in
         minBlocks=25
         extend=0.1
     } 
-    if (verbose) message("Creating bins\n")
+    if (verbose) message("Creating bins")
     IPbins <- genomeBlocks(organism, chrs, ipWidth)
     InputBins <- genomeBlocks(organism, chrs, inputWidth, ipWidth)
     if (verbose) message("Counting IP lanes")
