@@ -1,0 +1,5 @@
+<<label=loadExpr>>=
+load("expr.RData")
+head(expr)
+dim(expr)
+@

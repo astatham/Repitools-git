@@ -1,0 +1,8 @@
+<<label=loadAndShow>>=
+library(GenomicRanges)
+load("samplesList.RData")
+class(samples.list)
+names(samples.list)
+elementLengths(samples.list)
+samples.list[[1]]
+@

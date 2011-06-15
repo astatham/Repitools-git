@@ -1,0 +1,4 @@
+<<label=setEnv, echo=FALSE>>=
+options(prompt = " ", continue = " ")
+set.seed(4)
+@

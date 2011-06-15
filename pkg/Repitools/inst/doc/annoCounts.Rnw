@@ -1,0 +1,3 @@
+<<label = annoCounts>>=
+annotationCounts(samples.list, head(gene.anno, 10), up = 2000, down = 500, seq.len = 300)
+@

@@ -1,0 +1,6 @@
+<<label=mappabilityCalc>>=
+library(BSgenome.Hsapiens36bp.UCSC.hg18mappability)
+locations <- data.frame(chr = c("chr4", "chr9"),
+                        position = c(50000000, 100000000))
+mappabilityCalc(locations, window = 500, organism = Hsapiens36bp)
+@

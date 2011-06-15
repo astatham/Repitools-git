@@ -1,0 +1,4 @@
+<<label = genomeBlocks>>=
+library(BSgenome.Hsapiens.UCSC.hg18)
+genomeBlocks(Hsapiens, chrs = 1:25, width = 5000)
+@

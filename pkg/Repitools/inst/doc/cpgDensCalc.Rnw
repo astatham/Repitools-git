@@ -1,0 +1,3 @@
+<<label = cpgDensCalc>>=
+cpgDensityCalc(head(gene.anno, 10), window = 100, organism = Hsapiens)
+@

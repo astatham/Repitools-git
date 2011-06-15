@@ -1,0 +1,17 @@
+<<label=cluPlots>>=
+cvgs <- featureScores(H1samples[1:3], gene.anno, up = 5000, down = 2000, dist = "base",
+                      freq = 200, s.width = 500)
+@
+
+<<label=cluPlots2, echo=FALSE>>=
+png("clusterPlot.png", height = 1000, width = 2500, pointsize = 22)
+@
+
+<<label=cluPlots3>>=
+cp <- clusterPlots(cvgs, scale = function(x) sqrt(x), plot.type = "heatmap",
+             t.name = "H1 Cells", n.clusters = 10)
+@
+
+<<label=cluPlots3, echo=FALSE>>=
+dev.off()
+@
