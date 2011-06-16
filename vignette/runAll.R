@@ -1,0 +1,8 @@
+Sweave("setEnv.Rnw")
+Sweave("datasets.Rnw")
+Sweave("qc.Rnw")
+Sweave("analyses1.Rnw")
+Sweave("analyses2.Rnw")
+Sweave("visualisations.Rnw")
+Sweave("utilities.Rnw")
+Sweave("sInfo.Rnw")

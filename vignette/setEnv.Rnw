@@ -1,4 +1,5 @@
-<<label=setEnv, echo=FALSE>>=
+<<label=setEnv>>=
 options(prompt = " ", continue = " ")
 set.seed(4)
+library(Repitools)
 @
