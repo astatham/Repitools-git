@@ -1,0 +1,4 @@
+<<label=cluPlots3, echo=TRUE, fig=TRUE, width=8>>=
+table(clusters(cp))
+clusterPlots(cp, plot.type = "line", t.name = "H1 Cells")
+@

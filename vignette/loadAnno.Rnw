@@ -1,0 +1,5 @@
+<<label=loadAnno>>=
+gene.anno <- read.csv("geneAnno.csv", stringsAsFactors = FALSE)
+head(gene.anno)
+dim(gene.anno)
+@

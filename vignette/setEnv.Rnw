@@ -1,0 +1,5 @@
+<<label=setEnv>>=
+options(prompt = " ", continue = " ")
+set.seed(4)
+library(Repitools)
+@

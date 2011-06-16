@@ -1,0 +1,6 @@
+<<label = profPlots, fig = TRUE, width = 8>>=
+which.loss <- which(expr < -3)
+profilePlots(prostateCvgs,
+             gene.list = list(`Downregulated Genes` = which.loss),
+             cols = "red")
+@

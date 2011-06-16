@@ -1,0 +1,4 @@
+<<label=ChromaBlocksResults>>=
+H3K27me3.blocks
+regions(H3K27me3.blocks)
+@

@@ -1,0 +1,5 @@
+<<label=enrPlot, fig = TRUE>>=
+seqinfo(samples.list)
+enrichmentPlot(samples.list, seq.len = 300, cols = c("black", "green", "orange", "red"),
+               xlim = c(0, 10), lwd = 2)
+@

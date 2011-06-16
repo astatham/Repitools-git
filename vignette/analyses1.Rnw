@@ -1,0 +1,25 @@
+\subsection{Statistics of Differential Enrichment}
+The \texttt{blocksStats} function is a convenient way to do statistical tests of differential enrichment between two experimental conditions, using counts in regions of interest. The windows can be relative to some genomic landmarks, like transcription start sites (TSSs), and their size can be specified with the \texttt{up} and \texttt{down} parameters. If \texttt{up} and \texttt{down} are not provided, then windows are defined by start and end coordinates. The function leverages \texttt{edgeR}'s count modelling and its adaptation of Fisher's exact test for assessing differential enrichment.  The procedure also uses Bioconductor's facilities (i.e. \texttt{countOverlaps}) for counting mapped read in regions of the genome.
+
+<<label = bStatsSeq>>=
+design.matrix <- matrix(c(0, -1, 0, 1), dimnames = list(names(samples.list), "C-N"))
+design.matrix
+stats <- blocksStats(samples.list, gene.anno, up = 2000, down = 0, seq.len = 300, design = design.matrix)
+stats <- stats[order(stats$`adj.p.vals_C-N`), ]
+head(stats)
+@
+
+\noindent Note that this is {\em not} a real design matrix (in a statistical sense), it is simply a way of specifying the two experiment conditions to compare (they must be 1 and -1). \\
+
+\noindent The example above calculates statistics on regions that start 2000 bases upstream of the TSS and finish at the TSS, after the reads have been extended to being 300 bases. A coverage plot from UCSC browser illustrates the best found region.  For the output table, the read counts are scaled as if there were 10 million reads covering the regions of interest. \\
+
+\noindent Note that this procedure only works for simple 2-group comparisons.  Using this strategy for more complicated designs requires manually creating the count tables (see \texttt{annotationCounts} below) and calling the GLM-based procedures (e.g. using real design matrices) within \texttt{edgeR}. \\
+
+
+\begin{figure}[!h]
+    \begin{center}
+        \includegraphics{rock1.png}
+    \end{center}
+\end{figure}
+
+This differential enrichment strategy can be used on bins covering the entire genome.  The \texttt{genomeBlocks} function can be used to generate windows along the genome.

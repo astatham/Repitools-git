@@ -1,0 +1,7 @@
+<<label = bStatsSeq>>=
+design.matrix <- matrix(c(0, -1, 0, 1), dimnames = list(names(samples.list), "C-N"))
+design.matrix
+stats <- blocksStats(samples.list, gene.anno, up = 2000, down = 0, seq.len = 300, design = design.matrix)
+stats <- stats[order(stats$`adj.p.vals_C-N`), ]
+head(stats)
+@

@@ -1,0 +1,6 @@
+<<label = prostateFS>>=
+prostateCvgs <- featureScores(samples.list[c("PrEC IP", "LNCaP IP")], gene.anno, up = 5000, down = 1000, freq = 1000, s.width = 500)
+prostateCvgs
+prostateCvgs@scores <- list(tables(prostateCvgs)[[2]] - tables(prostateCvgs)[[1]])
+names(prostateCvgs) <- "LNCaP - PrEC"
+@

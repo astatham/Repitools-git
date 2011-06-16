@@ -1,0 +1,9 @@
+<<label = findClusters>>=
+stats.table <- cbind(gene.anno, expr)
+stats.table$pos <- ifelse(stats.table$strand == '+', stats.table$start, stats.table$end)
+pos.order <- order(stats.table$chr, stats.table$pos)
+stats.table <- stats.table[pos.order, ]
+stats.clustered <- findClusters(stats.table, score.col = 7, w.size = 5, n.med = 2, n.consec = 3, cut.samps = seq(-2, -10, -2), maxFDR = 0.05, trend = "down", n.perm = 10)
+cluster.1 <- which(stats.clustered$cluster == 1)
+stats.clustered[cluster.1, ]
+@

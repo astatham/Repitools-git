@@ -1,0 +1,7 @@
+<<label=sInfo>>=
+sessionInfo()
+@
+
+<<label=unsetEnv, echo=FALSE>>=
+options(prompt = "> ", continue = "+ ")
+@

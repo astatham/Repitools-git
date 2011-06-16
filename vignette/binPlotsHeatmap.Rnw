@@ -1,0 +1,4 @@
+<<label = binPlotsHeatmap, fig = TRUE, height = 7, width = 8>>=
+binPlots(prostateCvgs, ordering = expr, ord.label = "Cancer-Normal t-stat",
+         plot.type = "heatmap", n.bins = 50)
+@
