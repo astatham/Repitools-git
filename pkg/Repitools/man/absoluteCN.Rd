@@ -1,19 +1,21 @@
 \name{absoluteCN}
 \alias{absoluteCN}
-\alias{absoluteCN,data.frame-method}
-\alias{absoluteCN,GRanges-method}
+\alias{absoluteCN,data.frame,data.frame-method}
+\alias{absoluteCN,GRanges,GRanges-method}
 \title{Calculate Absolute Copy Number from Sequencing Counts}
 \description{Taking into account mappability and GC content biases, the absolute
   copy number is calculated, by assuming that the median read depth is a copy number
   of 1.
 }
 \usage{
-  \S4method{absoluteCN}{data.frame}(input.windows, ...)
-  \S4method{absoluteCN}{GRanges}(input.windows, input.counts = NULL, gc.params = NULL,
-                                 verbose = TRUE)
+  \S4method{absoluteCN}{data.frame,data.frame}(input.windows, ip.windows, ...)
+  \S4method{absoluteCN}{GRanges,GRanges}(input.windows, ip.windows, input.counts = NULL,
+                                         gc.params = NULL, verbose = TRUE)
 }
 \arguments{
   \item{input.windows}{A \code{data.frame} with (at least) columns \code{chr},
+                       \code{start}, and \code{end}, or a GRanges object.}
+  \item{ip.windows}{A \code{data.frame} with (at least) columns \code{chr},
                        \code{start}, and \code{end}, or a GRanges object.}
   \item{input.counts}{A matrix of counts. Rows are genomic windows and columns are
                       samples.}
@@ -41,8 +43,9 @@
   If the sample ploidys were omitted, then no scaling for ploidy is done.
 }
 \value{
-  A matrix, with a column for each sample, and a row for each genomic window,
-  containing the absolute copy number estimates.
+  A matrix of copy numbers of the regions specified by \code{ip.windows}. Each column
+  of the matrix is one sample. If region of interest did not have an estimated copy
+  number, it will contain NA.
 }
 \author{Dario Strbenac}
 \examples{
@@ -55,7 +58,7 @@
     counts <- annotationBlocksCounts(inputsReads, windows, seq.len = 300)
 
     gc.par <- GCAdjustParams(Hsapiens, Hsapiens36bp, 50, 10, 10, 4, c(2, 4))
-    abs.cn <- absoluteCN(windows, counts, gc.par)
+    abs.cn <- absoluteCN(windows, windows, counts, gc.par)
   }
 }
 

@@ -13,37 +13,41 @@ setMethod("relativeCN", c("GRanges", "GRanges"),
     require(DNAcopy)
 
     if(!is.null(gc.params)) # Do mappability / GC bias adjustment on counts.
-        input.scores <- gcMappabilityAdjust(input.windows, input.counts, pc.params, verbose)
-    else
+        input.scores <- absoluteCN(input.windows, ip.windows = input.windows, input.counts,
+                                   gc.params, verbose)
+    else 
         input.scores <- input.counts
 
-    Mvalues <- log2((input.scores[, 2] / sum(input.scores[, 2])) /
-                    (input.scores[, 1] / sum(input.scores[, 1])))
-    cn <- CNA(chrom = as.character(seqnames(input.windows)),
-             maploc = as.numeric(start(input.windows)),
+    usable.windows <- !is.na(rowSums(input.scores))
+    usable.scores <- input.scores[usable.windows, ]
+    usable.locs <- input.windows[usable.windows, ]
+
+    Mvalues <- log2((usable.scores[, 2] / sum(usable.scores[, 2])) /
+                    (usable.scores[, 1] / sum(usable.scores[, 1])))
+    cn <- CNA(chrom = as.character(seqnames(usable.locs)),
+             maploc = as.numeric(start(usable.locs)),
           data.type = "logratio",
            genomdat = Mvalues,
-           sampleid = paste(colnames(input.scores)[2], "/",
-                            colnames(input.scores)[1], "Fold Change"))
-    totals <- colSums(input.scores)
-    wts <- ((totals[2] - input.scores[, 2]) / (input.scores[, 2] * totals[2])
-          + (totals[1] - input.scores[, 1]) / (input.scores[, 1] * totals[1]))^-1
+           sampleid = paste(colnames(usable.scores)[2], "/",
+                            colnames(usable.scores)[1], "Fold Change"))
+    totals <- colSums(usable.scores)
+    wts <- ((totals[2] - usable.scores[, 2]) / (usable.scores[, 2] * totals[2])
+          + (totals[1] - usable.scores[, 1]) / (usable.scores[, 1] * totals[1]))^-1
     non0 <- which(wts > 0)
     cn <- cn[non0, ]
     wts <- wts[non0]
     if(verbose == TRUE) message("Segmenting and smoothing.")
-    cn <- segment(smooth.CNA(cn), weights = wts, ..., verbose = 0)
+    cn <- segment(smooth.CNA(cn), weights = wts,p.method = "perm", undo.splits = "sdundo", undo.SD = 1, verbose = 0)
+    if(verbose == TRUE) message("Done segmenting and smoothing.")
     # Extend CNV region to the end of the interval, since all positions are starts.
     cn$out[, "loc.end"] <- cn$out[, "loc.end"] + width(input.windows)[1]
     CNV.windows <- GRanges(cn$out[, "chrom"],
                            IRanges(cn$out[, "loc.start"], cn$out[, "loc.end"]))
 	
-    if(verbose == TRUE) message("Mapping copy number to IP windows.")
+    if(verbose == TRUE) message("Mapping copy number windows to IP windows.")
     map <- findOverlaps(ip.windows, CNV.windows, select = "first")
 							   
     relative.cn <- 2^cn$out[map, "seg.mean"]
-    # If CN ratio not called, assume it is 1.
-    relative.cn[is.na(relative.cn)] <- 1
     names(relative.cn) <- .getNames(ip.windows)
 
     relative.cn

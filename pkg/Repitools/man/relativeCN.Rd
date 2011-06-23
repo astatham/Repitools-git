@@ -4,7 +4,7 @@
 \alias{relativeCN,GRanges,GRanges-method}
 \title{Calculate Relative Copy Number and Map To Enriched Regions}
 \description{Based on the regions defined in \code{input.windows}, the function
-  first calculates the log2 fold change between the treatment and control columns
+  calculates the log2 fold change between the treatment and control columns
   of counts. Then, based on the regions defined in the \code{ip.windows} element,
   it finds which copy number region each enrichment region belongs to, and returns
   a vector that holds the copy number state of every enrichment region.
@@ -31,8 +31,7 @@
 \details{
   The algorithm used to decide on the copy number regions is Circular Binary
   Segmentation (Olshen et al. 2004). If an enrichment region maps to a region
-  that was not found to be in a copy number region from the input samples,
-  it is assigned the copy number of 1.
+  that was not segmentable, it is assigned NA.
 
   If \code{gc.params} is \code{NULL}, then no correction for mappability
   or GC content is done. If it is specified, then absolute copy numbers are
@@ -43,7 +42,8 @@
 }
 \value{
   A vector with the same number of elements as \code{input.windows}, that has
-  the copy number of each region relative to the control.
+  the copy number of each region relative to the control. The copy number ratios
+  returned are on the linear scale, not log2.
 }
 \author{Dario Strbenac}
 \references{Olshen, A. B., Venkatraman, E. S., Lucito, R., and Wigler, M. (2004).

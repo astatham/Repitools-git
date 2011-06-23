@@ -1,8 +1,11 @@
-setGeneric("absoluteCN", function(input.windows, ...){standardGeneric("absoluteCN")})
+setGeneric("absoluteCN", function(input.windows, ip.windows, ...){standardGeneric("absoluteCN")})
 
-setMethod("absoluteCN", c("GRanges"),
-    function(input.windows, input.counts = NULL, gc.params = NULL, verbose = TRUE)
+setMethod("absoluteCN", c("GRanges", "GRanges"),
+    function(input.windows, ip.windows, input.counts = NULL, gc.params = NULL, verbose = TRUE)
 {
+    if(is.null(gc.params))
+        stop("gc.params must be specified for absolute copy estimation.")
+
     n.bins <- gc.params@n.bins
 
     # Find which counting windows have sufficient mappability.
@@ -39,11 +42,19 @@ setMethod("absoluteCN", c("GRanges"),
     })
 
     # Adjust the real counts by dividing by expected counts.
-    t(t(abs.CN / model.CN) * gc.params@ploidy)
+    scaled.CN <- t(t(abs.CN / model.CN) * gc.params@ploidy)
+    
+    if(verbose == TRUE) message("Mapping copy number windows to IP windows.")
+    map <- findOverlaps(ip.windows, input.windows, select = "first")
+
+    features.CN <- scaled.CN[map, ]
+    rownames(features.CN) <- .getNames(ip.windows)
+
+    features.CN
 })
 
-setMethod("absoluteCN", c("data.frame"),
-    function(input.windows, ...)
+setMethod("absoluteCN", c("data.frame", "data.frame"),
+    function(input.windows, ip.windows, ...)
 {
-    absoluteCN(annoDF2GR(input.windows), ...)
+    absoluteCN(annoDF2GR(input.windows), annoDF2GR(ip.windows), ...)
 })
